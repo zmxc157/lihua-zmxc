@@ -6,6 +6,8 @@ let siteConfig = {};
 let slices = [];
 let currentFilter = '全部';
 let searchQuery = '';
+let currentPage = 1;
+const PAGE_SIZE = 5;
 
 const DARK_MODE_KEY = 'zmxc-dark';
 
@@ -13,6 +15,8 @@ const DARK_MODE_KEY = 'zmxc-dark';
 async function initSite() {
   // 初始化樱花飘落
   createSakuraPetals();
+  // 加载 zt.ttf 字体（绕过 GitHub 的 octet-stream MIME 限制，Firefox 也能用）
+  loadZtFont();
   // 加载配置
   try {
     siteConfig = await loadJSON('_data/config.json');
@@ -114,6 +118,7 @@ function renderFilters() {
     btn.textContent = cat;
     btn.onclick = () => {
       currentFilter = cat;
+      currentPage = 1;
       document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderSlices();
@@ -122,7 +127,18 @@ function renderFilters() {
   });
 }
 
-/* ---- 渲染切片 ---- */
+/* ---- 计算筛选结果（全局，跨全部切片） ---- */
+function getFilteredSlices() {
+  const q = searchQuery.toLowerCase().trim();
+  return slices.filter(s => {
+    const matchCat = currentFilter === '全部' || (s.category || '未分类') === currentFilter;
+    const matchSearch = !q || [s.title, s.category, s.author, s.note]
+      .filter(Boolean).some(v => String(v).toLowerCase().includes(q));
+    return matchCat && matchSearch;
+  });
+}
+
+/* ---- 渲染切片（含翻页，每页 5 个） ---- */
 function renderSlices() {
   const grid = document.getElementById('slices-grid');
   const empty = document.getElementById('empty-state');
@@ -131,26 +147,27 @@ function renderSlices() {
 
   loading.style.display = 'none';
 
-  const q = searchQuery.toLowerCase().trim();
-  const filtered = slices.filter(s => {
-    const matchCat  = currentFilter === '全部' || (s.category || '未分类') === currentFilter;
-    const matchSearch = !q || [s.title, s.category, s.author, s.note]
-      .filter(Boolean).some(v => v.toLowerCase().includes(q));
-    return matchCat && matchSearch;
-  });
+  const filtered = getFilteredSlices();
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
 
   countEl.textContent = slices.length > 0
-    ? `共 ${slices.length} 个切片${filtered.length !== slices.length ? `，显示 ${filtered.length} 个` : ''}`
+    ? `共 ${slices.length} 个切片${total !== slices.length ? `，匹配 ${total} 个` : ''}`
     : '';
 
-  if (filtered.length === 0) {
+  if (total === 0) {
     grid.innerHTML = '';
     empty.style.display = 'block';
+    renderPagination(0);
     return;
   }
   empty.style.display = 'none';
 
-  grid.innerHTML = filtered.map((s, i) => `
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+
+  grid.innerHTML = pageItems.map((s, i) => `
     <article class="slice-card" style="animation-delay:${i*0.05}s" data-id="${s.id}">
       <div class="slice-cover" style="${s.cover ? `background-image:url('${escAttr(s.cover)}')` : ''}"></div>
       <div class="slice-card-header">
@@ -172,6 +189,55 @@ function renderSlices() {
       </div>
     </article>
   `).join('');
+
+  renderPagination(totalPages);
+}
+
+/* ---- 翻页控件（用户端） ---- */
+function renderPagination(totalPages) {
+  const el = document.getElementById('pagination');
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  const win = getPageWindow(currentPage, totalPages);
+  let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">‹</button>`;
+  let prev = 0;
+  win.forEach(p => {
+    if (p - prev > 1) html += '<span class="page-ellipsis">…</span>';
+    html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+    prev = p;
+  });
+  html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">›</button>`;
+  el.innerHTML = html;
+}
+
+function getPageWindow(cur, total) {
+  const arr = [1, total];
+  for (let p = cur - 1; p <= cur + 1; p++) if (p >= 1 && p <= total) arr.push(p);
+  return [...new Set(arr)].sort((a, b) => a - b);
+}
+
+function goPage(p) {
+  if (p < 1) return;
+  currentPage = p;
+  renderSlices();
+  const grid = document.getElementById('slices-grid');
+  if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ---- 运行时加载 zt.ttf（绕过 MIME 限制） ---- */
+async function loadZtFont() {
+  const candidates = ['zt.ttf', '../zt.ttf'];
+  for (const u of candidates) {
+    try {
+      const r = await fetch(u, { cache: 'force-cache' });
+      if (!r.ok) continue;
+      const buf = await r.arrayBuffer();
+      const f = new FontFace('ZTCustom', buf);
+      await f.load();
+      document.fonts.add(f);
+      return;
+    } catch (e) { /* 尝试下一个候选路径 */ }
+  }
 }
 
 /* ---- 切片详情弹窗 ---- */
@@ -220,6 +286,7 @@ function setupEventListeners() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       searchQuery = searchInput.value;
+      currentPage = 1;
       clearBtn.style.display = searchQuery ? 'inline' : 'none';
       renderSlices();
     }, 200);
@@ -228,6 +295,7 @@ function setupEventListeners() {
   clearBtn.addEventListener('click', () => {
     searchInput.value = '';
     searchQuery = '';
+    currentPage = 1;
     clearBtn.style.display = 'none';
     renderSlices();
   });
