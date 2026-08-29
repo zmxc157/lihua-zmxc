@@ -408,3 +408,41 @@ a:hover { color: var(--pink-700); }
   color: #2e7d5b;
   margin-bottom: 14px;
 }
+
+/* === 翻页（前后台通用） === */
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 20px; flex-wrap: wrap;
+}
+.page-btn {
+  min-width: 36px; height: 36px; padding: 0 12px;
+  border-radius: 99px; border: 1.5px solid var(--border);
+  background: var(--bg-card); color: var(--text-sub);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-main); transition: var(--transition);
+}
+.page-btn:hover:not(:disabled) { border-color: var(--pink-300); color: var(--pink-600); background: var(--pink-50); }
+.page-btn.active {
+  background: linear-gradient(135deg, var(--pink-400), var(--pink-600));
+  color: #fff; border-color: transparent; box-shadow: 0 4px 14px var(--pink-glow);
+}
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-ellipsis { color: var(--text-muted); padding: 0 2px; }
+
+/* === 文件管理 === */
+.loading-inline { padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+.empty-inline { padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+.file-group { margin-bottom: 18px; }
+.file-group h4 { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 10px; font-weight: 600; }
+.file-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md); background: var(--bg-card);
+  margin-bottom: 8px;
+}
+.file-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--pink-50); }
+.file-ico { font-size: 1.6rem; width: 44px; text-align: center; flex-shrink: 0; }
+.file-info { flex: 1; min-width: 0; }
+.file-name { font-size: 0.85rem; color: var(--text-main); font-weight: 600; word-break: break-all; }
+.file-url { font-size: 0.72rem; color: var(--text-muted); word-break: break-all; margin-top: 2px; }
+.file-actions { display: flex; gap: 6px; flex-shrink: 0; }
