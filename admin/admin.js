@@ -18,7 +18,7 @@ async function initAdmin() {
     config = await loadJSON('../_data/config.json');
   } catch(e) {
     config = getDefaultConfig();
-    await saveConfig();
+    await saveConfig("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");
   }
 
   // 尝试自动登录
