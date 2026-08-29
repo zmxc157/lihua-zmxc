@@ -6,5 +6,11 @@
   "password": "",
   "passwordHash": "123456",
   "categories": ["歌切", "整活", "未分类"],
-  "questionnaires": []
+  "questionnaires": [],
+  "github": {
+    "owner": "zmxc157",
+    "repo": "lihua-zmxc",
+    "branch": "main",
+    "tokenEncrypted": "{\"alg\":\"AES-256-GCM/PBKDF2-SHA256\",\"salt\":\"NrPcpZM7LBF7D4Tvz2QEVQ==\",\"iv\":\"e1hHg2AmrwCGf2SH\",\"data\":\"luxQyIKOAnsKvsbZWR6dP6vivmWJxozROCEzFyCg/meH2RLQy8qj0VJajikhmIrhbKApFwvHEdVzdV0J07F5GGgOpN9+nDDkWVYW49kyFZehZP4RlWQQ/YWaPuGZ/+MoWEhOvWmgbKT7WvAQiQ==\"}"
+  }
 }
