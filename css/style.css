@@ -575,3 +575,51 @@ body::before {
     radial-gradient(ellipse 30% 40% at 90% 80%, rgba(255,143,163,0.08) 0%, transparent 100%);
   pointer-events: none;
 }
+
+/* === 切片封面 === */
+.slice-cover {
+  width: 100%;
+  height: 150px;
+  background: linear-gradient(135deg, #ffd9e3, #ffe9ef);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.slice-card .slice-cover { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+
+/* === 切片详情弹窗 === */
+.modal-wide { max-width: 560px; }
+.detail-cover {
+  width: 100%;
+  height: 190px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #ffd9e3, #ffe9ef);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-bottom: 14px;
+}
+.detail-meta {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  margin: 8px 0;
+}
+.detail-tag {
+  background: var(--pink-50);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+}
+.detail-note {
+  color: var(--text-sub);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  margin: 10px 0;
+  white-space: pre-wrap;
+  text-align: left;
+  background: var(--pink-50);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
