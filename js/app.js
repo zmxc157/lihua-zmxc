@@ -265,13 +265,6 @@ function setupEventListeners() {
       document.getElementById('detail-modal').style.display = 'none';
   };
 
-  // 管理后台入口
-  document.getElementById('admin-entry').onclick = (e) => {
-    e.preventDefault();
-    const hash = btoa('admin:' + (siteConfig.passwordHash || '123456'));
-    window.location.href = 'admin/index.html?auth=' + hash;
-  };
-
   // 问卷浮动按钮
   const fab = document.getElementById('questionnaire-fab');
   if (fab) {
