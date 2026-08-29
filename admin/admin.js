@@ -8,7 +8,7 @@ let isLoggedIn = false;
 let authToken = '';
 
 /* 内置加密的 GitHub Token（AES-256-GCM，密钥 zmxc233 由站长持有，不写在文件内） */
-const EMBEDDED_GH_TOKEN_ENC = '{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"NrPcpZM7LBF7D4Tvz2QEVQ==","iv":"e1hHg2AmrwCGf2SH","data":"luxQyIKOAnsKvsbZWR6dP6vivmWJxozROCEzFyCg/meH2RLQy8qj0VJajikhmIrhbKApFwvHEdVzdV0J07F5GGgOpN9+nDDkWVYW49kyFZehZP4RlWQQ/YWaPuGZ/+MoWEhOvWmgbKT7WvAQiQ=="}';
+const EMBEDDED_GH_TOKEN_ENC = '{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"JaazjlRnGehjZL2dVp5/zw==","iv":"/T4XHhFK2K9PufH9","data":"S22DKb/JQwg0IaKfwqEXu1KaTEm/14Gfc0nKXZ3Wn0vfNcTTcLNb70cSfKxbXsTiZf+vu4/JWEA="}';
 
 /* ---- 初始化 ---- */
 async function initAdmin() {
@@ -242,6 +242,7 @@ function editSlice(index) {
   document.getElementById('slice-date').value = s.date || '';
   document.getElementById('slice-author').value = s.author || '';
   document.getElementById('slice-audio').value = s.audio || '';
+    document.getElementById('slice-cover').value = s.cover || '';
   document.getElementById('slice-note').value = s.note || '';
 
   document.getElementById('slice-modal').style.display = 'flex';
@@ -262,6 +263,7 @@ async function saveSlice(e) {
     date: document.getElementById('slice-date').value,
     author: document.getElementById('slice-author').value.trim() || 'admin',
     audio: document.getElementById('slice-audio').value.trim(),
+    cover: document.getElementById('slice-cover').value.trim(),
     note: document.getElementById('slice-note').value.trim()
   };
 
@@ -505,7 +507,9 @@ function renderDeployConfig() {
   if (document.getElementById('gh-owner')) document.getElementById('gh-owner').value = gh.owner || 'zmxc157';
   if (document.getElementById('gh-repo')) document.getElementById('gh-repo').value = gh.repo || 'lihua-zmxc';
   if (document.getElementById('gh-token-enc')) document.getElementById('gh-token-enc').value = gh.tokenEncrypted || '';
-  if (document.getElementById('gh-key')) document.getElementById('gh-key').value = localStorage.getItem('zmxc_gh_key') || '';
+  if (document.getElementById('gh-key'))   document.getElementById('gh-key').value = localStorage.getItem('zmxc_gh_key') || '';
+  const dt = document.getElementById('deploy-target');
+  if (dt) dt.textContent = '🎯 推送目标仓库：' + (gh.owner || '?') + '/' + (gh.repo || '?') + ' @ ' + (gh.branch || 'main');
 }
 
 /* ---- 加密工具：明文 Token → 密文 ---- */
@@ -708,3 +712,55 @@ function base64ToBytes(b64) {
 function utf8ToBase64(str) {
   return bytesToBase64(new TextEncoder().encode(str));
 }
+/* ---- 资源上传：MP3 / 图片 直接传 GitHub ---- */
+async function uploadAsset() {
+  const input = document.getElementById('asset-file');
+  if (!input.files.length) { toast('⚠️ 请先选择要上传的文件', true); return; }
+  const file = input.files[0];
+  const isAudio = file.type.startsWith('audio') || /.(mp3|wav|ogg|m4a)$/i.test(file.name);
+  const isImage = file.type.startsWith('image') || /.(png|jpe?g|gif|webp|svg)$/i.test(file.name);
+  if (!isAudio && !isImage) { toast('⚠️ 仅支持 MP3 / 图片（png/jpg/gif/webp/svg）', true); return; }
+  const folder = isAudio ? 'assets/audio' : 'assets/imgs';
+  const gh = config.github;
+  if (!gh || !gh.tokenEncrypted) { toast('❌ 未配置 GitHub 部署，请先到「🚀 部署设置」保存', true); switchTab('deploy'); return; }
+  let key = localStorage.getItem('zmxc_gh_key');
+  if (!key && document.getElementById('gh-key')) key = document.getElementById('gh-key').value.trim();
+  if (!key) { toast('❌ 请先在「🚀 部署设置」填写 AES 密钥（zmxc233）', true); switchTab('deploy'); return; }
+  toast('⏳ 正在上传 ' + file.name + ' ...');
+  try {
+    const buf = await file.arrayBuffer();
+    const b64 = bytesToBase64(new Uint8Array(buf));
+    const repoPath = folder + '/' + file.name;
+    const api = 'https://api.github.com/repos/' + encodeURIComponent(gh.owner) + '/' + encodeURIComponent(gh.repo) + '/contents/' + repoPath;
+    const headers = { 'Authorization': 'Bearer ' + (await getGithubToken()), 'User-Agent': 'zmxc', 'Accept': 'application/vnd.github+json' };
+    const get = await fetch(api, { headers });
+    let sha = null;
+    if (get.status === 200) sha = (await get.json()).sha;
+    const body = { message: 'upload ' + repoPath, content: b64, branch: gh.branch || 'main' };
+    if (sha) body.sha = sha;
+    const put = await fetch(api, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers), body: JSON.stringify(body) });
+    if (!put.ok) { const t = await put.text(); throw new Error('HTTP ' + put.status + ' ' + t.slice(0, 120)); }
+    const rawUrl = 'https://raw.githubusercontent.com/' + gh.owner + '/' + gh.repo + '/' + (gh.branch || 'main') + '/' + repoPath;
+    const resEl = document.getElementById('asset-result');
+    const urlEl = document.getElementById('asset-url');
+    resEl.style.display = 'block';
+    urlEl.value = rawUrl;
+    toast('✅ 已上传 ' + file.name + ' 到 GitHub');
+    if (document.getElementById('slice-modal').style.display === 'flex') {
+      if (isAudio) document.getElementById('slice-audio').value = rawUrl;
+      if (isImage) document.getElementById('slice-cover').value = rawUrl;
+    }
+    input.value = '';
+  } catch(e) {
+    toast('❌ 上传失败：' + e.message, true);
+  }
+}
+
+function copyAssetUrl() {
+  const el = document.getElementById('asset-url');
+  if (!el) return;
+  el.select();
+  try { navigator.clipboard.writeText(el.value); } catch(e) {}
+  toast('📋 已复制链接');
+}
+
