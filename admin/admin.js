@@ -6,6 +6,9 @@ let config = {};
 let slices = [];
 let isLoggedIn = false;
 let authToken = '';
+let slicePage = 1;
+const SLICE_PAGE_SIZE = 10;
+let sliceSearchTerm = '';
 
 /* 内置加密的 GitHub Token（AES-256-GCM，密钥 zmxc233 由站长持有，不写在文件内） */
 const EMBEDDED_GH_TOKEN_ENC = '{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"JaazjlRnGehjZL2dVp5/zw==","iv":"/T4XHhFK2K9PufH9","data":"S22DKb/JQwg0IaKfwqEXu1KaTEm/14Gfc0nKXZ3Wn0vfNcTTcLNb70cSfKxbXsTiZf+vu4/JWEA="}';
@@ -23,6 +26,8 @@ async function initAdmin() {
   // 不自动登录：必须输入密码
   showLoginPage();
   setupLoginForm();
+  // 加载 zt.ttf（绕过 GitHub octet-stream MIME 限制）
+  loadZtFont();
 }
 
 /* ---- 页面切换 ---- */
@@ -95,7 +100,8 @@ async function loadAdminData() {
   } catch(e) {
     slices = [];
   }
-
+  slicePage = 1;
+  sliceSearchTerm = '';
   renderAll();
 }
 
@@ -123,17 +129,31 @@ function renderSlicesTable() {
   const tbody = document.getElementById('slices-tbody');
   const empty = document.getElementById('slices-empty');
   const countEl = document.getElementById('slice-count');
+  const q = sliceSearchTerm.toLowerCase().trim();
 
-  countEl.textContent = slices.length;
+  const filtered = slices.filter(s =>
+    !q || [s.title, s.category, s.author, s.note, s.url, s.date]
+      .filter(Boolean).some(v => String(v).toLowerCase().includes(q))
+  );
 
-  if (slices.length === 0) {
+  countEl.textContent = slices.length + (q ? '（匹配 ' + filtered.length + '）' : '');
+
+  if (filtered.length === 0) {
     tbody.innerHTML = '';
     empty.style.display = 'block';
+    renderSlicePagination(0);
     return;
   }
   empty.style.display = 'none';
 
-  tbody.innerHTML = slices.map((s, i) => `
+  const totalPages = Math.max(1, Math.ceil(filtered.length / SLICE_PAGE_SIZE));
+  if (slicePage > totalPages) slicePage = totalPages;
+  const start = (slicePage - 1) * SLICE_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + SLICE_PAGE_SIZE);
+
+  tbody.innerHTML = pageItems.map((s) => {
+    const idx = slices.indexOf(s);
+    return `
     <tr>
       <td class="title-cell" title="${escAttr(s.title)}">${escHtml(s.title)}</td>
       <td><span class="badge">${escHtml(s.category || '未分类')}</span></td>
@@ -141,12 +161,43 @@ function renderSlicesTable() {
       <td>${escHtml(s.author || 'admin')}</td>
       <td>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn-outline btn-sm" onclick="editSlice(${i})">✏️</button>
-          <button class="btn-danger" onclick="deleteSlice(${i})">🗑️</button>
+          <button class="btn-outline btn-sm" onclick="editSlice(${idx})">✏️</button>
+          <button class="btn-danger" onclick="deleteSlice(${idx})">🗑️</button>
         </div>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
+
+  renderSlicePagination(totalPages);
+}
+
+/* ---- 后台翻页控件（每页 10 个） ---- */
+function renderSlicePagination(totalPages) {
+  const el = document.getElementById('slice-pagination');
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  const win = getPageWindow(slicePage, totalPages);
+  let html = `<button class="page-btn" ${slicePage === 1 ? 'disabled' : ''} onclick="goSlicePage(${slicePage - 1})">‹</button>`;
+  let prev = 0;
+  win.forEach(p => {
+    if (p - prev > 1) html += '<span class="page-ellipsis">…</span>';
+    html += `<button class="page-btn ${p === slicePage ? 'active' : ''}" onclick="goSlicePage(${p})">${p}</button>`;
+    prev = p;
+  });
+  html += `<button class="page-btn" ${slicePage === totalPages ? 'disabled' : ''} onclick="goSlicePage(${slicePage + 1})">›</button>`;
+  el.innerHTML = html;
+}
+
+function goSlicePage(p) {
+  if (p < 1) return;
+  slicePage = p;
+  renderSlicesTable();
+}
+
+function getPageWindow(cur, total) {
+  const arr = [1, total];
+  for (let p = cur - 1; p <= cur + 1; p++) if (p >= 1 && p <= total) arr.push(p);
+  return [...new Set(arr)].sort((a, b) => a - b);
 }
 
 function renderSiteConfig() {
@@ -302,14 +353,11 @@ async function deleteSlice(index) {
   }
 }
 
-/* ---- 切片搜索 ---- */
+/* ---- 切片搜索（全局，跨全部切片，而非仅当前页） ---- */
 function filterSliceList() {
-  const q = document.getElementById('slice-search').value.toLowerCase();
-  const rows = document.querySelectorAll('#slices-tbody tr');
-  rows.forEach(row => {
-    const text = row.textContent.toLowerCase();
-    row.style.display = text.includes(q) ? '' : 'none';
-  });
+  sliceSearchTerm = document.getElementById('slice-search').value;
+  slicePage = 1;
+  renderSlicesTable();
 }
 
 /* ---- 站点设置 ---- */
@@ -417,6 +465,7 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab)?.classList.add('active');
   document.querySelector(`.nav-btn[data-tab="${tab}"]`)?.classList.add('active');
+  if (tab === 'files') loadFileManager();
 }
 
 /* ---- 工具函数 ---- */
@@ -762,5 +811,112 @@ function copyAssetUrl() {
   el.select();
   try { navigator.clipboard.writeText(el.value); } catch(e) {}
   toast('📋 已复制链接');
+}
+
+/* ===================================================
+   文件管理（列出 / 复制 / 删除 assets 下已上传的图片与音频）
+   =================================================== */
+async function githubListDir(gh, folder) {
+  const token = await getGithubToken();
+  const api = 'https://api.github.com/repos/' + encodeURIComponent(gh.owner) + '/' + encodeURIComponent(gh.repo) + '/contents/' + folder;
+  const headers = { 'Authorization': 'Bearer ' + token, 'User-Agent': 'zmxc', 'Accept': 'application/vnd.github+json' };
+  const r = await fetch(api, { headers });
+  if (r.status === 404) return [];
+  if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); }
+  return await r.json();
+}
+
+async function githubDeleteFile(gh, path, sha) {
+  const token = await getGithubToken();
+  const api = 'https://api.github.com/repos/' + encodeURIComponent(gh.owner) + '/' + encodeURIComponent(gh.repo) + '/contents/' + path;
+  const r = await fetch(api, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + token, 'User-Agent': 'zmxc', 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'delete ' + path, sha: sha, branch: gh.branch || 'main' })
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); }
+}
+
+async function loadFileManager() {
+  const gh = config.github;
+  const wrap = document.getElementById('file-list');
+  if (!wrap) return;
+  if (!gh || !gh.tokenEncrypted) {
+    wrap.innerHTML = '<div class="empty-inline">未配置 GitHub 部署，无法列出文件。请先到「🚀 部署设置」保存仓库与 Token。</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="loading-inline">📂 正在读取仓库文件...</div>';
+  try {
+    const [audio, imgs] = await Promise.all([
+      githubListDir(gh, 'assets/audio').catch(() => []),
+      githubListDir(gh, 'assets/imgs').catch(() => [])
+    ]);
+    renderFileManager(audio, imgs);
+  } catch (e) {
+    wrap.innerHTML = '<div class="form-error">读取失败：' + escHtml(e.message) + '（请确认已在「🚀 部署设置」填写 AES 密钥 zmxc233）</div>';
+  }
+}
+
+function renderFileManager(audio, imgs) {
+  const wrap = document.getElementById('file-list');
+  if (!wrap) return;
+  const gh = config.github;
+  const rawBase = 'https://raw.githubusercontent.com/' + gh.owner + '/' + gh.repo + '/' + (gh.branch || 'main') + '/';
+  const block = (title, list, type) => {
+    if (!list || !list.length) return '<div class="file-group"><h4>' + title + '</h4><div class="empty-inline">暂无文件</div></div>';
+    return '<div class="file-group"><h4>' + title + '（' + list.length + '）</h4>' + list.map(f => {
+      const url = rawBase + f.path;
+      return '<div class="file-row" data-path="' + escAttr(f.path) + '" data-sha="' + escAttr(f.sha) + '">' +
+        (type === 'img' ? '<img class="file-thumb" src="' + escAttr(url) + '" alt="" />' : '<span class="file-ico">🎵</span>') +
+        '<div class="file-info"><div class="file-name">' + escHtml(f.name) + '</div><div class="file-url">' + escHtml(url) + '</div></div>' +
+        '<div class="file-actions">' +
+          '<button class="btn-outline btn-sm" onclick="copyAssetLink(\'' + escAttr(f.path) + '\')">📋 复制</button>' +
+          '<button class="btn-danger btn-sm" onclick="deleteAsset(\'' + escAttr(f.path) + '\',\'' + escAttr(f.sha) + '\',\'' + type + '\')">🗑️ 删除</button>' +
+        '</div></div>';
+    }).join('') + '</div>';
+  };
+  wrap.innerHTML = block('🎵 音频（assets/audio）', audio, 'audio') + block('🖼️ 图片（assets/imgs）', imgs, 'img');
+}
+
+async function deleteAsset(path, sha, type) {
+  if (!confirm('确认删除文件：' + path + ' ？\n该操作会直接写入 GitHub 仓库，不可恢复。')) return;
+  const gh = config.github;
+  toast('⏳ 正在删除 ' + path + ' ...');
+  try {
+    await githubDeleteFile(gh, path, sha);
+    toast('🗑️ 已删除 ' + path);
+    await loadFileManager();
+  } catch (e) {
+    toast('❌ 删除失败：' + e.message, true);
+  }
+}
+
+function copyAssetLink(path) {
+  const gh = config.github;
+  const url = 'https://raw.githubusercontent.com/' + gh.owner + '/' + gh.repo + '/' + (gh.branch || 'main') + '/' + path;
+  const tmp = document.createElement('input');
+  tmp.value = url;
+  document.body.appendChild(tmp);
+  tmp.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  try { navigator.clipboard.writeText(url); } catch (e) {}
+  document.body.removeChild(tmp);
+  toast('📋 已复制链接');
+}
+
+/* ---- 运行时加载 zt.ttf（绕过 GitHub 的 octet-stream MIME 限制，Firefox 也能用） ---- */
+async function loadZtFont() {
+  const candidates = ['zt.ttf', '../zt.ttf'];
+  for (const u of candidates) {
+    try {
+      const r = await fetch(u, { cache: 'force-cache' });
+      if (!r.ok) continue;
+      const buf = await r.arrayBuffer();
+      const f = new FontFace('ZTCustom', buf);
+      await f.load();
+      document.fonts.add(f);
+      return;
+    } catch (e) { /* 尝试下一个候选路径 */ }
+  }
 }
 
