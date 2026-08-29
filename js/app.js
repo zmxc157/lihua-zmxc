@@ -152,12 +152,13 @@ function renderSlices() {
 
   grid.innerHTML = filtered.map((s, i) => `
     <article class="slice-card" style="animation-delay:${i*0.05}s" data-id="${s.id}">
+      <div class="slice-cover" style="${s.cover ? `background-image:url('${escAttr(s.cover)}')` : ''}"></div>
       <div class="slice-card-header">
         <span class="slice-category">${escHtml(s.category || '未分类')}</span>
         <span class="slice-date">${s.date || ''}</span>
       </div>
       <div class="slice-card-body">
-        <div class="slice-title" onclick="openExternalLink('${escAttr(s.url)}')">${escHtml(s.title)}</div>
+        <div class="slice-title" onclick="openSliceDetail('${escAttr(s.id)}')">${escHtml(s.title)}</div>
         <div class="slice-author">👤 ${escHtml(s.author || 'admin')}</div>
         ${s.audio
           ? `<audio class="slice-audio" controls src="${escAttr(s.audio)}"><source src="${escAttr(s.audio)}" type="audio/mpeg"></audio>`
@@ -171,6 +172,33 @@ function renderSlices() {
       </div>
     </article>
   `).join('');
+}
+
+/* ---- 切片详情弹窗 ---- */
+function openSliceDetail(id) {
+  const s = slices.find(x => x.id === id);
+  if (!s) return;
+  const modal = document.getElementById('detail-modal');
+  const cover = document.getElementById('detail-cover');
+  if (s.cover) {
+    cover.style.backgroundImage = `url('${escAttr(s.cover)}')`;
+    cover.style.display = 'block';
+  } else {
+    cover.style.backgroundImage = '';
+    cover.style.display = 'none';
+  }
+  document.getElementById('detail-title').textContent = s.title;
+  const meta = [];
+  if (s.category) meta.push('🏷️ ' + s.category);
+  if (s.author) meta.push('👤 ' + s.author);
+  if (s.date) meta.push('📅 ' + s.date);
+  document.getElementById('detail-meta').innerHTML = meta.map(m => `<span class="detail-tag">${escHtml(m)}</span>`).join('');
+  document.getElementById('detail-note').textContent = s.note || '（暂无简介）';
+  document.getElementById('detail-audio').innerHTML = s.audio
+    ? `<audio class="slice-audio" controls src="${escAttr(s.audio)}"><source src="${escAttr(s.audio)}" type="audio/mpeg"></audio>`
+    : `<div class="slice-no-audio">🎧 暂无试听音频</div>`;
+  document.getElementById('detail-watch').onclick = () => openExternalLink(s.url);
+  modal.style.display = 'flex';
 }
 
 /* ---- 外部链接提示 ---- */
@@ -223,6 +251,18 @@ function setupEventListeners() {
   document.getElementById('external-modal').onclick = (e) => {
     if (e.target === e.currentTarget)
       document.getElementById('external-modal').style.display = 'none';
+  };
+
+  // 切片详情弹窗
+  document.getElementById('detail-modal-close').onclick = () => {
+    document.getElementById('detail-modal').style.display = 'none';
+  };
+  document.getElementById('detail-cancel').onclick = () => {
+    document.getElementById('detail-modal').style.display = 'none';
+  };
+  document.getElementById('detail-modal').onclick = (e) => {
+    if (e.target === e.currentTarget)
+      document.getElementById('detail-modal').style.display = 'none';
   };
 
   // 管理后台入口
@@ -303,4 +343,5 @@ function getStorage(k) {
 
 /* ---- 全局暴露 ---- */
 window.openExternalLink = openExternalLink;
+window.openSliceDetail = openSliceDetail;
 window.escHtml = escHtml;
