@@ -18,7 +18,7 @@ async function initAdmin() {
     config = await loadJSON('../_data/config.json');
   } catch(e) {
     config = getDefaultConfig();
-    await saveConfig("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");
+    await saveConfig();
   }
 
   // 尝试自动登录
@@ -134,6 +134,7 @@ async function renderAll() {
   renderSlicesTable();
   renderSiteConfig();
   renderQuestionnaires();
+  renderDeployConfig();
 }
 
 function renderCategories() {
@@ -447,14 +448,25 @@ async function saveSlices() {
 }
 
 async function saveFile(path, content) {
-  // GitHub Pages 静态托管无法写文件
-  // 这里通过 WebDAV / 腾讯云 API / 用户手动等方式实现持久化
-  // 演示模式下存 localStorage
+  // 优先使用 GitHub API（Token 加密存储）写入仓库
+  const gh = config.github;
+  if (gh && gh.tokenEncrypted) {
+    try {
+      await githubWriteFile(gh, path, content);
+      showDeployMsg('✅ 已通过 GitHub API 保存 ' + path, false);
+      return;
+    } catch(e) {
+      console.error('GitHub save failed:', e);
+      showDeployMsg('⚠️ GitHub 保存失败（' + e.message + '），已降级为本地存储');
+    }
+  }
+  // 降级：本地存储
   try {
     localStorage.setItem('zmxc_' + path, content);
   } catch(e) {}
-  // 实际部署需要用户配置云端存储方案
-  alert('⚠️ 当前为演示模式，数据已保存在浏览器本地存储。\n部署到 GitHub Pages 需要配置后端（如 GitHub API / Cloudflare Workers / 腾讯云 COS）来持久化保存数据。\n\n请查看 README.md 了解完整的部署方案。');
+  if (!(gh && gh.tokenEncrypted)) {
+    alert('⚠️ 尚未配置 GitHub 部署，数据仅保存在浏览器本地。\n请到「🚀 部署设置」配置 GitHub Token（加密存储）后即可同步到仓库。');
+  }
 }
 
 function hashPassword(pw) {
@@ -493,4 +505,188 @@ function escHtml(str) {
 function escAttr(str) {
   if (!str) return '';
   return String(str).replace(/"/g, '&quot;');
+}
+
+/* ===================================================
+   GitHub 部署 · AES-256-GCM 加密存储
+   =================================================== */
+
+/* ---- 部署配置渲染 ---- */
+function renderDeployConfig() {
+  const gh = config.github || {};
+  if (document.getElementById('gh-owner')) document.getElementById('gh-owner').value = gh.owner || '';
+  if (document.getElementById('gh-repo')) document.getElementById('gh-repo').value = gh.repo || '';
+  if (document.getElementById('gh-token-enc')) document.getElementById('gh-token-enc').value = gh.tokenEncrypted || '';
+  if (document.getElementById('gh-key')) document.getElementById('gh-key').value = localStorage.getItem('zmxc_gh_key') || '';
+}
+
+/* ---- 加密工具：明文 Token → 密文 ---- */
+async function encryptToken() {
+  const key = document.getElementById('gh-key').value.trim();
+  const plain = document.getElementById('gh-token-plain').value.trim();
+  if (!key) { showDeployMsg('请先填写 AES 密钥'); return; }
+  if (!plain) { showDeployMsg('请粘贴 GitHub 明文 Token'); return; }
+  try {
+    const payload = await aesEncrypt(plain, key);
+    document.getElementById('gh-token-enc').value = JSON.stringify(payload);
+    document.getElementById('gh-token-plain').value = '';
+    showDeployMsg('🔒 加密完成！密文已填入上方输入框，明文已清除');
+  } catch(e) {
+    showDeployMsg('❌ 加密失败：' + e.message, true);
+  }
+}
+
+/* ---- 保存部署配置 ---- */
+async function saveDeployConfig() {
+  const owner = document.getElementById('gh-owner').value.trim();
+  const repo = document.getElementById('gh-repo').value.trim();
+  const key = document.getElementById('gh-key').value.trim();
+  const enc = document.getElementById('gh-token-enc').value.trim();
+  if (!owner || !repo) { showDeployMsg('请填写 GitHub 用户名和仓库名'); return; }
+  if (!config.github) config.github = {};
+  config.github.owner = owner;
+  config.github.repo = repo;
+  config.github.branch = 'main';
+  if (enc) config.github.tokenEncrypted = enc;
+  if (key) {
+    localStorage.setItem('zmxc_gh_key', key);
+  }
+  await saveConfig();
+  showDeployMsg('✅ 部署配置已保存。Token 仅以密文形式存入 config.json，AES 密钥仅存本浏览器');
+}
+
+/* ---- 测试连接 ---- */
+async function testGithub() {
+  try {
+    const token = await getGithubToken();
+    const r = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': 'Bearer ' + token, 'User-Agent': 'zmxc-admin' }
+    });
+    if (r.ok) {
+      const j = await r.json();
+      showDeployMsg('✅ GitHub 连接成功：' + j.login + '（' + (j.name || '') + '）');
+    } else {
+      const t = await r.text();
+      showDeployMsg('❌ 连接失败：HTTP ' + r.status + ' ' + t.slice(0, 200), true);
+    }
+  } catch(e) {
+    showDeployMsg('❌ 解密或网络错误：' + e.message, true);
+  }
+}
+
+/* ---- 读取解密后的 Token（仅内存使用，不落盘） ---- */
+async function getGithubToken() {
+  const gh = config.github;
+  if (!gh || !gh.tokenEncrypted) throw new Error('未配置 GitHub Token 密文');
+  let key = localStorage.getItem('zmxc_gh_key');
+  if (!key) key = document.getElementById('gh-key') ? document.getElementById('gh-key').value.trim() : '';
+  if (!key) throw new Error('缺少 AES 密钥（请在部署设置中填写）');
+  const payload = JSON.parse(gh.tokenEncrypted);
+  return aesDecrypt(payload, key);
+}
+
+/* ---- 写入文件到 GitHub 仓库（Contents API） ---- */
+async function githubWriteFile(gh, path, content) {
+  const token = await getGithubToken();
+  const api = 'https://api.github.com/repos/' + encodeURIComponent(gh.owner) + '/' + encodeURIComponent(gh.repo)
+    + '/contents/' + path.split('/').map(encodeURIComponent).join('/');
+  const headers = {
+    'Authorization': 'Bearer ' + token,
+    'User-Agent': 'zmxc-admin',
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json'
+  };
+  // 获取已有文件 sha（不存在则新建）
+  let sha = null;
+  try {
+    const r = await fetch(api, { headers });
+    if (r.ok) { const j = await r.json(); sha = j.sha; }
+  } catch(e) {}
+  const body = {
+    message: 'update ' + path + ' via admin panel',
+    content: utf8ToBase64(content),
+    branch: gh.branch || 'main'
+  };
+  if (sha) body.sha = sha;
+  const r2 = await fetch(api, { method: 'PUT', headers, body: JSON.stringify(body) });
+  if (!r2.ok) {
+    const t = await r2.text();
+    throw new Error('HTTP ' + r2.status + ' ' + t.slice(0, 200));
+  }
+}
+
+/* ---- 消息提示 ---- */
+function showDeployMsg(msg, isError) {
+  const el = document.getElementById('deploy-msg');
+  if (!el) { alert(msg); return; }
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.color = isError ? '#c84050' : '#2e9e6a';
+  clearTimeout(showDeployMsg._t);
+  showDeployMsg._t = setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+/* ===================================================
+   AES-GCM 加解密（Web Crypto API，无需第三方库）
+   =================================================== */
+
+function cryptoAvailable() {
+  return !!(window.crypto && window.crypto.subtle);
+}
+
+async function aesEncrypt(plaintext, passphrase) {
+  if (!cryptoAvailable()) throw new Error('当前环境不支持 Web Crypto（需 https 或 localhost）');
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+  const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  return {
+    salt: bytesToBase64(salt),
+    iv: bytesToBase64(iv),
+    data: bytesToBase64(new Uint8Array(cipher)),
+    alg: 'AES-256-GCM/PBKDF2-SHA256'
+  };
+}
+
+async function aesDecrypt(payload, passphrase) {
+  if (!cryptoAvailable()) throw new Error('当前环境不支持 Web Crypto（需 https 或 localhost）');
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: base64ToBytes(payload.salt), iterations: 150000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+  const plain = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: base64ToBytes(payload.iv) },
+    key,
+    base64ToBytes(payload.data)
+  );
+  return new TextDecoder().decode(plain);
+}
+
+/* ---- Base64 工具 ---- */
+function bytesToBase64(bytes) {
+  let bin = '';
+  bytes.forEach(b => { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+function base64ToBytes(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+function utf8ToBase64(str) {
+  return bytesToBase64(new TextEncoder().encode(str));
 }
