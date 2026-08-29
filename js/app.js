@@ -7,7 +7,7 @@ let slices = [];
 let currentFilter = '全部';
 let searchQuery = '';
 let currentPage = 1;
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 const DARK_MODE_KEY = 'zmxc-dark';
 
