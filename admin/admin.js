@@ -122,12 +122,6 @@ async function loadAdminData() {
     slices = [];
   }
 
-  // 检查默认密码
-  if (config.passwordHash === '123456' || config.passwordHash === hashPassword('123456') || config.passwordHash === 'e10adc3949ba59abbe56e057f20f883e') {
-    showChangePasswordPage();
-    return;
-  }
-
   renderAll();
 }
 
@@ -489,7 +483,7 @@ function getDefaultConfig() {
     heroTitle: '🌸 星辰桑切片站 🌸',
     description: '收录星辰桑的所有可爱切片，愿你喜欢 ✨',
     icon: '',
-    passwordHash: '123456',
+    passwordHash: hashPassword('20090329'),
     categories: ['歌切', '整活', '未分类'],
     questionnaires: [],
     github: {
