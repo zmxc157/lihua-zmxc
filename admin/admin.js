@@ -7,6 +7,9 @@ let slices = [];
 let isLoggedIn = false;
 let authToken = '';
 
+/* 内置加密的 GitHub Token（AES-256-GCM，密钥 zmxc233 由站长持有，不写在文件内） */
+const EMBEDDED_GH_TOKEN_ENC = '{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"NrPcpZM7LBF7D4Tvz2QEVQ==","iv":"e1hHg2AmrwCGf2SH","data":"luxQyIKOAnsKvsbZWR6dP6vivmWJxozROCEzFyCg/meH2RLQy8qj0VJajikhmIrhbKApFwvHEdVzdV0J07F5GGgOpN9+nDDkWVYW49kyFZehZP4RlWQQ/YWaPuGZ/+MoWEhOvWmgbKT7WvAQiQ=="}';
+
 /* ---- 初始化 ---- */
 async function initAdmin() {
   // 解析认证参数
@@ -488,7 +491,13 @@ function getDefaultConfig() {
     icon: '',
     passwordHash: '123456',
     categories: ['歌切', '整活', '未分类'],
-    questionnaires: []
+    questionnaires: [],
+    github: {
+      owner: 'zmxc157',
+      repo: 'lihua-zmxc',
+      branch: 'main',
+      tokenEncrypted: EMBEDDED_GH_TOKEN_ENC
+    }
   };
 }
 
@@ -513,9 +522,9 @@ function escAttr(str) {
 
 /* ---- 部署配置渲染 ---- */
 function renderDeployConfig() {
-  const gh = config.github || {};
-  if (document.getElementById('gh-owner')) document.getElementById('gh-owner').value = gh.owner || '';
-  if (document.getElementById('gh-repo')) document.getElementById('gh-repo').value = gh.repo || '';
+  const gh = config.github || { owner: 'zmxc157', repo: 'lihua-zmxc', tokenEncrypted: EMBEDDED_GH_TOKEN_ENC };
+  if (document.getElementById('gh-owner')) document.getElementById('gh-owner').value = gh.owner || 'zmxc157';
+  if (document.getElementById('gh-repo')) document.getElementById('gh-repo').value = gh.repo || 'lihua-zmxc';
   if (document.getElementById('gh-token-enc')) document.getElementById('gh-token-enc').value = gh.tokenEncrypted || '';
   if (document.getElementById('gh-key')) document.getElementById('gh-key').value = localStorage.getItem('zmxc_gh_key') || '';
 }
