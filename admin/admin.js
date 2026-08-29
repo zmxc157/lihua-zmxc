@@ -18,7 +18,7 @@ async function initAdmin() {
     config = await loadJSON('../_data/config.json');
   } catch(e) {
     config = getDefaultConfig();
-    await saveConfig("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");
+    await saveConfig("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");
   }
 
   // 尝试自动登录
