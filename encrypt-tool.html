@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔐 Token 加解密工具</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Shippori+Mincho:wght@600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pink-50:#fff0f3; --pink-100:#ffe0e6; --pink-200:#ffb3c1;
+      --pink-400:#ff6b8a; --pink-500:#ff5c7a; --pink-600:#e84a6a;
+      --pink-700:#c8385a; --bg:#fff8f9; --card:#fff;
+      --text:#5a2d3e; --sub:#9a5570; --mut:#c490a8; --border:#ffd6e0;
+      --font:'Zen Maru Gothic','Noto Sans SC',system-ui,sans-serif;
+      --jp:'Shippori Mincho',serif;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh;
+           background-image:radial-gradient(ellipse 60% 50% at 10% 0%,rgba(255,179,193,.15),transparent),radial-gradient(ellipse 50% 60% at 90% 100%,rgba(255,143,163,.12),transparent); }
+    .wrap { max-width:680px; margin:0 auto; padding:32px 18px 60px; }
+    h1 { font-family:var(--jp); font-size:1.8rem; font-weight:800; text-align:center;
+         background:linear-gradient(135deg,var(--pink-600),var(--pink-400),var(--pink-600));
+         -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+         background-clip:text; margin-bottom:6px; }
+    .sub { text-align:center; color:var(--sub); font-size:.85rem; margin-bottom:18px; }
+    .tip { padding:10px 14px; border-radius:14px; font-size:.8rem; line-height:1.7; margin-bottom:20px; }
+    .tip.ok { background:#e8f8ef; border:1.5px solid #b7e8cd; color:#2e7d52; }
+    .tip.err { background:#fff8e1; border:1.5px solid #ffe082; color:#7a6a3a; }
+    .card { background:var(--card); border:1.5px solid var(--border); border-radius:22px;
+            box-shadow:0 6px 24px rgba(255,107,138,.12); padding:22px; margin-bottom:20px; }
+    .card h2 { font-family:var(--jp); font-size:1.15rem; font-weight:700; color:var(--text); margin-bottom:14px; }
+    label { display:block; font-size:.82rem; font-weight:600; color:var(--sub); margin:12px 0 6px; }
+    input, textarea { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:14px;
+                      background:var(--bg); color:var(--text); font-family:var(--font); font-size:.9rem; outline:none; transition:.3s; }
+    input:focus, textarea:focus { border-color:var(--pink-400); box-shadow:0 0 0 3px rgba(255,107,138,.15); }
+    textarea { resize:vertical; min-height:90px; font-family:ui-monospace,'SF Mono',Consolas,monospace; font-size:.8rem; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+    button { padding:10px 22px; border-radius:14px; border:none; cursor:pointer; font-family:var(--font);
+             font-weight:600; font-size:.88rem; transition:.3s; }
+    .btn-pink { background:linear-gradient(135deg,var(--pink-400),var(--pink-600)); color:#fff;
+                box-shadow:0 4px 16px rgba(255,107,138,.25); }
+    .btn-pink:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,107,138,.35); }
+    .btn-outline { background:transparent; color:var(--pink-600); border:2px solid var(--border); }
+    .btn-outline:hover { border-color:var(--pink-400); background:var(--pink-50); }
+    .btn-sm { padding:7px 16px; font-size:.8rem; }
+    .note { font-size:.76rem; color:var(--mut); margin-top:6px; line-height:1.6; }
+    .copy-ok { color:var(--pink-600); font-size:.78rem; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🔐 Token 加解密工具</h1>
+    <p class="sub">AES-256-GCM · 与后台部署设置完全兼容</p>
+    <div id="env-tip" class="tip">检测中…</div>
+
+    <!-- 加密 -->
+    <div class="card">
+      <h2>🔒 加密（明文 Token → 密文）</h2>
+      <label>明文 GitHub Token</label>
+      <input type="password" id="enc-plain" placeholder="ghp_ 开头的令牌，仅在本页内存中使用" autocomplete="off" />
+      <label>AES 密钥（务必牢记，解密必须用同一密钥）</label>
+      <input type="password" id="enc-key" placeholder="任意长度密钥" autocomplete="off" />
+      <div class="row">
+        <button class="btn-pink" onclick="doEncrypt()">🔒 一键加密</button>
+        <button class="btn-outline btn-sm" onclick="genKey()">🎲 生成随机密钥</button>
+      </div>
+      <label>密文（整行复制到后台「Token 密文」框）</label>
+      <textarea id="enc-out" readonly placeholder="加密后这里显示 JSON 密文"></textarea>
+      <div class="row">
+        <button class="btn-outline btn-sm" onclick="copyText('enc-out')">📋 复制密文</button>
+        <span id="enc-copied" class="copy-ok" style="display:none">已复制 ✅</span>
+      </div>
+    </div>
+
+    <!-- 解密 -->
+    <div class="card">
+      <h2>🔓 解密（密文 → 明文 Token，用于验证）</h2>
+      <label>密文 JSON</label>
+      <textarea id="dec-in" placeholder='{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"...","iv":"...","data":"..."}'></textarea>
+      <label>AES 密钥</label>
+      <input type="password" id="dec-key" placeholder="生成密文时用的同一密钥" autocomplete="off" />
+      <div class="row">
+        <button class="btn-pink" onclick="doDecrypt()">🔓 一键解密</button>
+      </div>
+      <label>还原出的明文 Token</label>
+      <input type="text" id="dec-out" readonly placeholder="解密结果" />
+    </div>
+
+    <p class="note">
+      🌸 安全说明：本工具仅在你的浏览器本地运算，数据不会上传任何服务器。<br>
+      🌸 生成的密文可安全放入网站 config.json（GitHub 扫描器看不到明文令牌）。<br>
+      🌸 密钥请妥善保管；忘记密钥 = 密文无法还原，需重新生成。
+    </p>
+  </div>
+
+  <script>
+    // ===== 与 admin.js 完全相同的 AES-256-GCM 实现 =====
+    function bytesToBase64(bytes){ let bin=''; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); }
+    function base64ToBytes(b64){ const bin=atob(b64); const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
+
+    async function aesEncrypt(plaintext, passphrase){
+      if(!crypto.subtle) throw new Error('环境不支持 Web Crypto');
+      const enc=new TextEncoder();
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      const iv=crypto.getRandomValues(new Uint8Array(12));
+      const km=await crypto.subtle.importKey('raw',enc.encode(passphrase),'PBKDF2',false,['deriveKey']);
+      const key=await crypto.subtle.deriveKey(
+        {name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},
+        km,{name:'AES-GCM',length:256},false,['encrypt']);
+      const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(plaintext));
+      return {alg:'AES-256-GCM/PBKDF2-SHA256',salt:bytesToBase64(salt),
+              iv:bytesToBase64(iv),data:bytesToBase64(new Uint8Array(ct))};
+    }
+    async function aesDecrypt(payload,passphrase){
+      if(!crypto.subtle) throw new Error('环境不支持 Web Crypto');
+      const enc=new TextEncoder();
+      const km=await crypto.subtle.importKey('raw',enc.encode(passphrase),'PBKDF2',false,['deriveKey']);
+      const key=await crypto.subtle.deriveKey(
+        {name:'PBKDF2',salt:base64ToBytes(payload.salt),iterations:150000,hash:'SHA-256'},
+        km,{name:'AES-GCM',length:256},false,['decrypt']);
+      const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:base64ToBytes(payload.iv)},key,base64ToBytes(payload.data));
+      return new TextDecoder().decode(plain);
+    }
+
+    // ===== 交互 =====
+    async function doEncrypt(){
+      const plain=document.getElementById('enc-plain').value.trim();
+      const key=document.getElementById('enc-key').value;
+      if(!plain||!key){ alert('请填写明文 Token 和密钥'); return; }
+      try{
+        const p=await aesEncrypt(plain,key);
+        document.getElementById('enc-out').value=JSON.stringify(p);
+      }catch(e){ alert('加密失败：'+e.message); }
+    }
+    async function doDecrypt(){
+      const json=document.getElementById('dec-in').value.trim();
+      const key=document.getElementById('dec-key').value;
+      if(!json||!key){ alert('请填写密文和密钥'); return; }
+      try{
+        const payload=JSON.parse(json);
+        const plain=await aesDecrypt(payload,key);
+        document.getElementById('dec-out').value=plain;
+      }catch(e){ alert('解密失败：'+e.message+'（密钥错误或密文损坏）'); }
+    }
+    function genKey(){
+      if(!crypto.subtle){ alert('请先在支持的浏览器/环境下打开'); return; }
+      const k=Array.from(crypto.getRandomValues(new Uint8Array(16)))
+        .map(b=>b.toString(16).padStart(2,'0')).join('');
+      document.getElementById('enc-key').value=k;
+      alert('已生成随机密钥，请记下来：\n'+k);
+    }
+    function copyText(id){
+      const el=document.getElementById(id); el.select();
+      try{ navigator.clipboard.writeText(el.value); }
+      catch(e){ document.execCommand('copy'); }
+      const ok=document.getElementById('enc-copied'); ok.style.display='inline';
+      setTimeout(()=>ok.style.display='none',2000);
+    }
+
+    // ===== 环境检测 =====
+    window.addEventListener('DOMContentLoaded',()=>{
+      const tip=document.getElementById('env-tip');
+      if(window.crypto && crypto.subtle){
+        tip.className='tip ok';
+        tip.textContent='✅ 加密环境可用（secure context），可直接加解密。';
+      }else{
+        tip.className='tip err';
+        tip.innerHTML='⚠️ 当前以 file:// 直接打开，浏览器禁用 Web Crypto，无法加解密。<br>'+
+          '请用本地服务器打开：在本文件所在目录运行 <b>python -m http.server 8000</b>，'+
+          '再访问 <b>http://localhost:8000/encrypt-tool.html</b>；或部署到 https 后访问。';
+      }
+    });
+  </script>
+</body>
+</html>
