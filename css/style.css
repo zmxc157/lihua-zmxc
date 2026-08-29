@@ -623,3 +623,23 @@ body::before {
   border-radius: var(--radius-sm);
   padding: 10px 14px;
 }
+
+/* === 翻页 === */
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 28px; flex-wrap: wrap;
+}
+.page-btn {
+  min-width: 38px; height: 38px; padding: 0 12px;
+  border-radius: 99px; border: 1.5px solid var(--border);
+  background: var(--bg-card); color: var(--text-sub);
+  font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-main); transition: var(--transition);
+}
+.page-btn:hover:not(:disabled) { border-color: var(--pink-300); color: var(--pink-600); background: var(--pink-50); }
+.page-btn.active {
+  background: linear-gradient(135deg, var(--pink-400), var(--pink-600));
+  color: #fff; border-color: transparent; box-shadow: 0 4px 14px var(--pink-glow);
+}
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-ellipsis { color: var(--text-muted); padding: 0 2px; }
