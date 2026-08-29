@@ -12,10 +12,6 @@ const EMBEDDED_GH_TOKEN_ENC = '{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"NrPcpZ
 
 /* ---- 初始化 ---- */
 async function initAdmin() {
-  // 解析认证参数
-  const params = new URLSearchParams(window.location.search);
-  authToken = params.get('auth') || '';
-
   // 加载配置
   try {
     config = await loadJSON('../_data/config.json');
@@ -24,27 +20,8 @@ async function initAdmin() {
     await saveConfig();
   }
 
-  // 尝试自动登录
-  if (authToken) {
-    try {
-      const decoded = atob(authToken);
-      const [user, pw] = decoded.split(':');
-      if (user === 'admin') {
-        // 简单验证: 检查密码
-        const inputHash = hashPassword(pw);
-        if (inputHash === config.passwordHash || pw === config.passwordHash || pw === '123456') {
-          isLoggedIn = true;
-        }
-      }
-    } catch(e) {}
-  }
-
-  if (isLoggedIn) {
-    showAdminPage();
-  } else {
-    showLoginPage();
-  }
-
+  // 不自动登录：必须输入密码
+  showLoginPage();
   setupLoginForm();
 }
 
@@ -80,9 +57,7 @@ function setupLoginForm() {
 
     if (inputHash === config.passwordHash || pw === config.passwordHash) {
       isLoggedIn = true;
-      // 跳转携带token
-      const newToken = btoa('admin:' + config.passwordHash);
-      window.location.href = 'index.html?auth=' + newToken;
+      showAdminPage();
     } else {
       errorEl.textContent = '密码错误，请重试';
       errorEl.style.display = 'block';
@@ -109,8 +84,7 @@ function setupLoginForm() {
     config.passwordHash = hashPassword(pw1);
     await saveConfig();
     isLoggedIn = true;
-    const newToken = btoa('admin:' + config.passwordHash);
-    window.location.href = 'index.html?auth=' + newToken;
+    showAdminPage();
   });
 }
 
@@ -227,6 +201,7 @@ async function addCategory() {
   await saveConfig();
   renderCategories();
   input.value = '';
+  toast('✅ 已添加分类：' + val);
 }
 
 async function removeCategory(cat) {
@@ -235,6 +210,7 @@ async function removeCategory(cat) {
   config.categories = config.categories.filter(c => c !== cat);
   await saveConfig();
   renderCategories();
+  toast('🗑️ 已删除分类：' + cat);
 }
 
 /* ---- 切片 CRUD ---- */
@@ -300,16 +276,28 @@ async function saveSlice(e) {
     slices.unshift(sliceData);
   }
 
-  await saveSlices();
+  const res = await saveSlices();
   closeSliceModal();
   renderSlicesTable();
+  if (res && res.github) {
+    toast('✅ 切片已保存并同步到 GitHub');
+  } else if (res && res.error) {
+    toast('⚠️ 切片已保存到本地，GitHub 同步失败：' + res.error + '（请点「立即应用」重试）', true);
+  } else {
+    toast('✅ 切片已保存到本地（未配置部署，点「立即应用」可推送）');
+  }
 }
 
 async function deleteSlice(index) {
   if (!confirm('确认删除该切片？')) return;
   slices.splice(index, 1);
-  await saveSlices();
+  const res = await saveSlices();
   renderSlicesTable();
+  if (res && res.github) {
+    toast('🗑️ 切片已删除并同步到 GitHub');
+  } else {
+    toast('🗑️ 切片已删除（本地）');
+  }
 }
 
 /* ---- 切片搜索 ---- */
@@ -328,12 +316,13 @@ async function saveSiteConfig() {
   config.heroTitle = document.getElementById('cfg-hero-title').value.trim();
   config.description = document.getElementById('cfg-desc').value.trim();
   config.icon = document.getElementById('cfg-icon').value.trim();
-  await saveConfig();
+  const res = await saveConfig();
 
   const msg = document.getElementById('site-msg');
   msg.textContent = '✅ 站点设置已保存！';
   msg.style.display = 'block';
   setTimeout(() => { msg.style.display = 'none'; }, 3000);
+  if (res && res.github) toast('✅ 站点设置已同步到 GitHub');
 }
 
 /* ---- 问卷 CRUD ---- */
@@ -375,15 +364,17 @@ async function saveQuestionnaire(e) {
 
   if (!config.questionnaires) config.questionnaires = [];
 
+  const isEdit = !!idField;
   if (idField) {
     config.questionnaires[parseInt(idField)] = qData;
   } else {
     config.questionnaires.push(qData);
   }
 
-  await saveConfig();
+  const res = await saveConfig();
   closeQModal();
   renderQuestionnaires();
+  toast((isEdit ? '✏️ 问卷已更新' : '✅ 问卷已添加') + (res && res.github ? '并同步到 GitHub' : '（本地）'));
 }
 
 async function deleteQuestionnaire(index) {
@@ -404,9 +395,6 @@ async function saveAccount() {
     if (pw1 !== pw2) { alert('两次密码不一致'); return; }
     config.passwordHash = hashPassword(pw1);
     await saveConfig();
-    // 更新URL token
-    const newToken = btoa('admin:' + config.passwordHash);
-    window.history.replaceState({}, '', '?auth=' + newToken);
   }
 
   document.getElementById('acc-new-pw').value = '';
@@ -437,33 +425,30 @@ async function loadJSON(url) {
 }
 
 async function saveConfig() {
-  await saveFile('../_data/config.json', JSON.stringify(config, null, 2));
+  return await saveFile('../_data/config.json', JSON.stringify(config, null, 2));
 }
 
 async function saveSlices() {
-  await saveFile('../_data/slices.json', JSON.stringify(slices, null, 2));
+  return await saveFile('../_data/slices.json', JSON.stringify(slices, null, 2));
 }
 
 async function saveFile(path, content) {
-  // 优先使用 GitHub API（Token 加密存储）写入仓库
+  // 始终先写入本地存储（即时、可靠）
+  try {
+    localStorage.setItem('zmxc_' + path, content);
+  } catch(e) {}
+  // 尝试通过 GitHub API 同步到仓库
   const gh = config.github;
   if (gh && gh.tokenEncrypted) {
     try {
       await githubWriteFile(gh, path, content);
-      showDeployMsg('✅ 已通过 GitHub API 保存 ' + path, false);
-      return;
+      return { ok: true, github: true };
     } catch(e) {
       console.error('GitHub save failed:', e);
-      showDeployMsg('⚠️ GitHub 保存失败（' + e.message + '），已降级为本地存储');
+      return { ok: true, github: false, error: e.message };
     }
   }
-  // 降级：本地存储
-  try {
-    localStorage.setItem('zmxc_' + path, content);
-  } catch(e) {}
-  if (!(gh && gh.tokenEncrypted)) {
-    alert('⚠️ 尚未配置 GitHub 部署，数据仅保存在浏览器本地。\n请到「🚀 部署设置」配置 GitHub Token（加密存储）后即可同步到仓库。');
-  }
+  return { ok: true, github: false };
 }
 
 function hashPassword(pw) {
@@ -591,8 +576,9 @@ async function getGithubToken() {
 /* ---- 写入文件到 GitHub 仓库（Contents API） ---- */
 async function githubWriteFile(gh, path, content) {
   const token = await getGithubToken();
+  const repoPath = path.replace(/^(\.\.\/)+/, '');
   const api = 'https://api.github.com/repos/' + encodeURIComponent(gh.owner) + '/' + encodeURIComponent(gh.repo)
-    + '/contents/' + path.split('/').map(encodeURIComponent).join('/');
+    + '/contents/' + repoPath.split('/').map(encodeURIComponent).join('/');
   const headers = {
     'Authorization': 'Bearer ' + token,
     'User-Agent': 'zmxc-admin',
@@ -618,15 +604,44 @@ async function githubWriteFile(gh, path, content) {
   }
 }
 
-/* ---- 消息提示 ---- */
-function showDeployMsg(msg, isError) {
-  const el = document.getElementById('deploy-msg');
-  if (!el) { alert(msg); return; }
+/* ---- 浮层提示 ---- */
+function toast(msg, isError) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
   el.textContent = msg;
-  el.style.display = 'block';
-  el.style.color = isError ? '#c84050' : '#2e9e6a';
-  clearTimeout(showDeployMsg._t);
-  showDeployMsg._t = setTimeout(() => { el.style.display = 'none'; }, 6000);
+  el.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = 'toast'; }, 4000);
+}
+
+/* ---- 立即应用：把最新数据推送到 GitHub ---- */
+async function applyToGithub() {
+  const gh = config.github;
+  if (!gh || !gh.tokenEncrypted) {
+    toast('❌ 未配置 GitHub 部署，请先到「🚀 部署设置」保存', true);
+    switchTab('deploy');
+    return;
+  }
+  let key = localStorage.getItem('zmxc_gh_key');
+  if (!key && document.getElementById('gh-key')) key = document.getElementById('gh-key').value.trim();
+  if (!key) {
+    toast('❌ 请先在「🚀 部署设置」填写 AES 密钥（zmxc233）', true);
+    switchTab('deploy');
+    return;
+  }
+  toast('⏳ 正在推送到 GitHub...');
+  try {
+    await githubWriteFile(gh, '../_data/config.json', JSON.stringify(config, null, 2));
+    await githubWriteFile(gh, '../_data/slices.json', JSON.stringify(slices, null, 2));
+    toast('✅ 已立即应用到 GitHub（config + slices）');
+  } catch(e) {
+    toast('❌ 推送失败：' + e.message, true);
+  }
 }
 
 /* ===================================================
