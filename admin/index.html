@@ -116,6 +116,27 @@
           <div id="slices-empty" class="empty-inline" style="display:none">暂无切片，点击上方按钮添加</div>
         </div>
       </div>
+
+      <!-- 资源上传 -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📤 资源上传（MP3 / 图片）</h3>
+        </div>
+        <div class="card-body">
+          <p class="upload-tip">上传后直接存入 GitHub 仓库（音频 → <code>assets/audio</code>，图片 → <code>assets/imgs</code>），下方生成可访问直链。若正在编辑切片，上传后会自动填入音频 / 封面字段。</p>
+          <div class="form-row">
+            <input type="file" id="asset-file" class="input input-sm" accept="audio/*,image/*,.mp3,.png,.jpg,.jpeg,.gif,.webp,.svg" style="max-width:340px" />
+            <button class="btn-outline btn-sm" onclick="uploadAsset()">⬆️ 上传到 GitHub</button>
+          </div>
+          <div id="asset-result" style="display:none;margin-top:14px">
+            <label class="label">GitHub 直链（可复制使用）</label>
+            <div class="form-row">
+              <input type="text" id="asset-url" class="input input-sm" readonly />
+              <button class="btn-sm btn-outline" onclick="copyAssetUrl()">📋 复制</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 站点设置 -->
@@ -183,6 +204,7 @@
               <input type="text" id="gh-repo" class="input" placeholder="例如：lihua-zmxc" autocomplete="off" />
             </div>
           </div>
+          <div class="deploy-target" id="deploy-target"></div>
           <div class="form-row-2">
             <div class="form-group">
               <label class="label">AES 密钥（passphrase，仅存本浏览器）</label>
@@ -249,6 +271,10 @@
             <label class="label">试听音频（MP3 链接）</label>
             <input type="url" id="slice-audio" class="input" placeholder="https://... .mp3（可选）" />
           </div>
+        </div>
+        <div class="form-group">
+          <label class="label">封面图（图片链接，可选）</label>
+          <input type="url" id="slice-cover" class="input" placeholder="https://... .png（可选，留空则显示默认封面）" />
         </div>
         <div class="form-group">
           <label class="label">备注说明</label>
