@@ -384,3 +384,27 @@ a:hover { color: var(--pink-700); }
 .toast.error {
   background: rgba(200,56,90,0.96);
 }
+
+.upload-tip {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.upload-tip code {
+  background: var(--pink-50);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 0.78rem;
+  color: var(--pink-700);
+}
+.deploy-target {
+  background: #e8f5ee;
+  border: 1.5px solid #b2e3c8;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  color: #2e7d5b;
+  margin-bottom: 14px;
+}
