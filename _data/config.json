@@ -15,6 +15,6 @@
     "owner": "zmxc157",
     "repo": "lihua-zmxc",
     "branch": "main",
-    "tokenEncrypted": "{\"alg\":\"AES-256-GCM/PBKDF2-SHA256\",\"salt\":\"NrPcpZM7LBF7D4Tvz2QEVQ==\",\"iv\":\"e1hHg2AmrwCGf2SH\",\"data\":\"luxQyIKOAnsKvsbZWR6dP6vivmWJxozROCEzFyCg/meH2RLQy8qj0VJajikhmIrhbKApFwvHEdVzdV0J07F5GGgOpN9+nDDkWVYW49kyFZehZP4RlWQQ/YWaPuGZ/+MoWEhOvWmgbKT7WvAQiQ==\"}"
+    "tokenEncrypted": "{\"alg\":\"AES-256-GCM/PBKDF2-SHA256\",\"salt\":\"JaazjlRnGehjZL2dVp5/zw==\",\"iv\":\"/T4XHhFK2K9PufH9\",\"data\":\"S22DKb/JQwg0IaKfwqEXu1KaTEm/14Gfc0nKXZ3Wn0vfNcTTcLNb70cSfKxbXsTiZf+vu4/JWEA=\",\"alg\":\"AES-256-GCM/PBKDF2-SHA256\"}"
   }
 }
