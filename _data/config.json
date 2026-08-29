@@ -5,7 +5,11 @@
   "icon": "",
   "password": "",
   "passwordHash": "h75b7af2f",
-  "categories": ["歌切", "整活", "未分类"],
+  "categories": [
+    "歌切",
+    "整活",
+    "未分类"
+  ],
   "questionnaires": [],
   "github": {
     "owner": "zmxc157",
