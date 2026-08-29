@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>星辰桑切片站 · 管理后台</title>
+  <link rel="icon" type="image/svg+xml" href="../_data/config.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&family=Shippori+Mincho:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div class="sakura-bg"></div>
+
+  <!-- 登录页 -->
+  <div id="login-page" class="page">
+    <div class="login-card">
+      <div class="login-logo">🌸</div>
+      <h1 class="login-title">管理后台</h1>
+      <p class="login-sub">请输入管理员密码</p>
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <input type="password" id="login-pw" class="input" placeholder="密码" autocomplete="current-password" required />
+        </div>
+        <div id="login-error" class="form-error" style="display:none"></div>
+        <button type="submit" class="btn-pink btn-full">登录 →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 强制改密页 -->
+  <div id="change-pw-page" class="page" style="display:none">
+    <div class="login-card">
+      <div class="login-logo">🔐</div>
+      <h1 class="login-title">修改默认密码</h1>
+      <p class="login-sub">检测到您仍在使用默认密码，请先修改</p>
+      <form id="change-pw-form" class="login-form">
+        <div class="form-group">
+          <label class="label">新密码</label>
+          <input type="password" id="new-pw" class="input" placeholder="输入新密码" minlength="6" autocomplete="new-password" required />
+        </div>
+        <div class="form-group">
+          <label class="label">确认密码</label>
+          <input type="password" id="new-pw2" class="input" placeholder="再次输入密码" autocomplete="new-password" required />
+        </div>
+        <div id="pw-error" class="form-error" style="display:none"></div>
+        <button type="submit" class="btn-pink btn-full">确认修改 →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理主页 -->
+  <div id="admin-page" class="page" style="display:none">
+    <!-- 顶部导航 -->
+    <nav class="admin-nav">
+      <div class="nav-brand">🌸 管理后台</div>
+      <div class="nav-links">
+        <button class="nav-btn active" onclick="switchTab('slices')" data-tab="slices">📋 切片管理</button>
+        <button class="nav-btn" onclick="switchTab('site')" data-tab="site">⚙️ 站点设置</button>
+        <button class="nav-btn" onclick="switchTab('questionnaire')" data-tab="questionnaire">📝 问卷管理</button>
+        <button class="nav-btn" onclick="switchTab('account')" data-tab="account">🔑 账号设置</button>
+      </div>
+      <div class="nav-right">
+        <a href="../index.html" class="nav-link" target="_blank">← 返回前台</a>
+        <button class="btn-sm btn-outline" onclick="doLogout()">退出登录</button>
+      </div>
+    </nav>
+
+    <!-- 切片管理 -->
+    <section id="tab-slices" class="tab-content active">
+      <div class="section-header">
+        <h2 class="section-title">📋 切片管理</h2>
+        <button class="btn-pink btn-sm" onclick="openAddSliceModal()">+ 添加切片</button>
+      </div>
+
+      <!-- 分类管理 -->
+      <div class="card">
+        <div class="card-header">
+          <h3>🏷️ 分类管理</h3>
+        </div>
+        <div class="card-body">
+          <div class="tags-wrap" id="category-tags"></div>
+          <div class="form-row" style="margin-top:12px">
+            <input type="text" id="new-category" class="input input-sm" placeholder="新分类名称" style="max-width:200px" />
+            <button class="btn-sm btn-outline" onclick="addCategory()">添加分类</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 切片列表 -->
+      <div class="card">
+        <div class="card-header">
+          <h3>🎬 全部切片 <span id="slice-count" class="badge"></span></h3>
+          <input type="text" id="slice-search" class="input input-sm" placeholder="搜索切片..." style="max-width:200px" oninput="filterSliceList()" />
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="data-table" id="slices-table">
+              <thead>
+                <tr>
+                  <th>标题</th>
+                  <th>分类</th>
+                  <th>日期</th>
+                  <th>发布者</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="slices-tbody"></tbody>
+            </table>
+          </div>
+          <div id="slices-empty" class="empty-inline" style="display:none">暂无切片，点击上方按钮添加</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 站点设置 -->
+    <section id="tab-site" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">⚙️ 站点设置</h2>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-group">
+            <label class="label">网站标题</label>
+            <input type="text" id="cfg-title" class="input" placeholder="星辰桑切片站" />
+          </div>
+          <div class="form-group">
+            <label class="label">横幅标题（留空使用网站标题）</label>
+            <input type="text" id="cfg-hero-title" class="input" placeholder="🌸 星辰桑切片站 🌸" />
+          </div>
+          <div class="form-group">
+            <label class="label">网站说明</label>
+            <textarea id="cfg-desc" class="input textarea" placeholder="收录星辰桑的所有可爱切片..." rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="label">网站图标 URL（SVG/PNG，填入链接或留空）</label>
+            <input type="text" id="cfg-icon" class="input" placeholder="https://..." />
+          </div>
+          <button class="btn-pink" onclick="saveSiteConfig()">💾 保存站点设置</button>
+          <div id="site-msg" class="form-success" style="display:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 问卷管理 -->
+    <section id="tab-questionnaire" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">📝 问卷管理</h2>
+        <button class="btn-pink btn-sm" onclick="openAddQuestionnaireModal()">+ 添加问卷</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div id="questionnaire-list"></div>
+          <div id="q-empty" class="empty-inline">暂无问卷，点击上方按钮添加</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 账号设置 -->
+    <section id="tab-account" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">🔑 账号设置</h2>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-group">
+            <label class="label">当前用户名</label>
+            <input type="text" class="input" value="admin" disabled />
+          </div>
+          <div class="form-group">
+            <label class="label">新密码（留空则不修改）</label>
+            <input type="password" id="acc-new-pw" class="input" placeholder="输入新密码（至少6位）" autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label class="label">确认新密码</label>
+            <input type="password" id="acc-new-pw2" class="input" placeholder="再次输入新密码" autocomplete="new-password" />
+          </div>
+          <div id="acc-msg" class="form-success" style="display:none"></div>
+          <button class="btn-pink" onclick="saveAccount()">💾 修改密码</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 添加/编辑切片弹窗 -->
+  <div id="slice-modal" class="modal-overlay" style="display:none">
+    <div class="modal-card modal-wide">
+      <button class="modal-close" onclick="closeSliceModal()">✕</button>
+      <div class="modal-sakura">🌸</div>
+      <h2 class="modal-title" id="slice-modal-title">添加切片</h2>
+      <form id="slice-form" onsubmit="saveSlice(event)">
+        <input type="hidden" id="slice-id" />
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="label">切片标题 <span class="required">*</span></label>
+            <input type="text" id="slice-title" class="input" placeholder="例如：【歌切】星辰桑唱..." required />
+          </div>
+          <div class="form-group">
+            <label class="label">分类 <span class="required">*</span></label>
+            <select id="slice-category" class="input select"></select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="label">视频链接 <span class="required">*</span></label>
+            <input type="url" id="slice-url" class="input" placeholder="https://www.bilibili.com/video/..." required />
+          </div>
+          <div class="form-group">
+            <label class="label">发布日期</label>
+            <input type="date" id="slice-date" class="input" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="label">发布者</label>
+            <input type="text" id="slice-author" class="input" placeholder="admin" />
+          </div>
+          <div class="form-group">
+            <label class="label">试听音频（MP3 链接）</label>
+            <input type="url" id="slice-audio" class="input" placeholder="https://... .mp3（可选）" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="label">备注说明</label>
+          <textarea id="slice-note" class="input textarea" placeholder="备注信息（可选）" rows="2"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button type="button" class="btn-outline" onclick="closeSliceModal()">取消</button>
+          <button type="submit" class="btn-pink">💾 保存切片</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 添加/编辑问卷弹窗 -->
+  <div id="q-modal" class="modal-overlay" style="display:none">
+    <div class="modal-card modal-wide">
+      <button class="modal-close" onclick="closeQModal()">✕</button>
+      <div class="modal-sakura">📝</div>
+      <h2 class="modal-title" id="q-modal-title">添加问卷</h2>
+      <form id="q-form" onsubmit="saveQuestionnaire(event)">
+        <input type="hidden" id="q-id" />
+        <div class="form-group">
+          <label class="label">问卷标题 <span class="required">*</span></label>
+          <input type="text" id="q-title" class="input" placeholder="问卷标题" required />
+        </div>
+        <div class="form-group">
+          <label class="label">问卷链接 <span class="required">*</span></label>
+          <input type="url" id="q-url" class="input" placeholder="https://..." required />
+        </div>
+        <div class="form-group">
+          <label class="label">问卷说明</label>
+          <textarea id="q-desc" class="input textarea" placeholder="问卷说明..." rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="label">显示位置</label>
+          <select id="q-position" class="input select">
+            <option value="modal">🌸 进入时弹窗</option>
+            <option value="fab">🌸 右下角小岛常驻</option>
+            <option value="list-top">📋 列表顶部</option>
+            <option value="list-bottom">📋 列表底部</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button type="button" class="btn-outline" onclick="closeQModal()">取消</button>
+          <button type="submit" class="btn-pink">💾 保存问卷</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => initAdmin());
+  </script>
+</body>
+</html>
