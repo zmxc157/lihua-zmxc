@@ -60,6 +60,7 @@
         <button class="nav-btn" onclick="switchTab('site')" data-tab="site">⚙️ 站点设置</button>
         <button class="nav-btn" onclick="switchTab('questionnaire')" data-tab="questionnaire">📝 问卷管理</button>
         <button class="nav-btn" onclick="switchTab('account')" data-tab="account">🔑 账号设置</button>
+        <button class="nav-btn" onclick="switchTab('files')" data-tab="files">🗂️ 文件管理</button>
         <button class="nav-btn" onclick="switchTab('deploy')" data-tab="deploy">🚀 部署设置</button>
       </div>
       <div class="nav-right">
@@ -114,6 +115,7 @@
             </table>
           </div>
           <div id="slices-empty" class="empty-inline" style="display:none">暂无切片，点击上方按钮添加</div>
+          <div id="slice-pagination" class="pagination"></div>
         </div>
       </div>
 
@@ -229,6 +231,20 @@
             <button class="btn-outline" onclick="testGithub()">🔌 测试连接</button>
           </div>
           <div id="deploy-msg" class="form-success" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 文件管理 -->
+    <section id="tab-files" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">🗂️ 文件管理（图片 / 音频）</h2>
+        <button class="btn-outline btn-sm" onclick="loadFileManager()">🔄 刷新</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <p class="upload-tip">这里列出已上传到 GitHub 仓库 <code>assets/audio</code> 与 <code>assets/imgs</code> 的文件，可复制直链或删除。删除会直接写入仓库，不可恢复。</p>
+          <div id="file-list"></div>
         </div>
       </div>
     </section>
