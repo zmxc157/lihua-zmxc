@@ -472,6 +472,9 @@ a:hover { color: var(--pink-700); }
   animation: fadeIn 0.25s ease;
 }
 
+/* 站外跳转确认弹窗需置顶（从详情弹窗内触发时不被详情弹窗遮盖） */
+#external-modal { z-index: 1100; }
+
 .modal-card {
   background: var(--bg-modal);
   border-radius: var(--radius-xl);
