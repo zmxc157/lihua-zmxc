@@ -68,21 +68,34 @@
     </div>
   </div>
 
-  <!-- 切片详情弹窗 -->
+  <!-- 切片详情弹窗（自适应大小，超高时内部滚动 + 顶部进度条） -->
   <div id="detail-modal" class="modal-overlay" style="display:none">
-    <div class="modal-card modal-wide">
+    <div class="modal-card modal-wide detail-card">
+      <div class="modal-progress" id="detail-progress"><i id="detail-progress-bar"></i></div>
       <button class="modal-close" id="detail-modal-close">✕</button>
-      <div class="detail-cover" id="detail-cover"></div>
-      <h2 class="modal-title" id="detail-title"></h2>
-      <div class="detail-meta" id="detail-meta"></div>
-      <p class="detail-note" id="detail-note"></p>
-      <div id="detail-audio"></div>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px">
-        <button class="btn-outline" id="detail-cancel">关闭</button>
-        <button class="btn-pink" id="detail-watch">🎬 观看原视频 →</button>
+      <div class="modal-scroll" id="detail-scroll">
+        <!-- 加载提示（手机版：弹窗中央 Windows 11 风格旋转动画 + 正在加载文本，1-3s 后显示内容） -->
+        <div class="detail-loading" id="detail-loading">
+          <div class="win-spinner" aria-hidden="true"></div>
+          <p class="detail-loading-text">正在加载…</p>
+        </div>
+        <div id="detail-content">
+          <div class="detail-cover" id="detail-cover"></div>
+          <h2 class="modal-title" id="detail-title"></h2>
+          <div class="detail-meta" id="detail-meta"></div>
+          <p class="detail-note" id="detail-note"></p>
+          <div id="detail-audio"></div>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+            <button class="btn-outline" id="detail-cancel">关闭</button>
+            <button class="btn-pink" id="detail-watch">🎬 观看原视频 →</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- NowLoading：PC 右下角详情加载提示（默认同网页字体文本，或服务端指定 PNG，闪动效果写死；手机版固定中央旋转动画，不用此元素） -->
+  <div id="now-loading" class="now-loading" role="status" aria-live="polite"></div>
 
   <!-- 切片列表 -->
   <main class="main-container">
