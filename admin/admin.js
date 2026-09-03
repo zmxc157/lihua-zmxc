@@ -205,6 +205,7 @@ function renderSiteConfig() {
   document.getElementById('cfg-hero-title').value = config.heroTitle || '';
   document.getElementById('cfg-desc').value = config.description || '';
   document.getElementById('cfg-icon').value = config.icon || '';
+  document.getElementById('cfg-now-loading-img').value = config.nowLoadingImage || '';
 }
 
 function renderQuestionnaires() {
@@ -366,6 +367,7 @@ async function saveSiteConfig() {
   config.heroTitle = document.getElementById('cfg-hero-title').value.trim();
   config.description = document.getElementById('cfg-desc').value.trim();
   config.icon = document.getElementById('cfg-icon').value.trim();
+  config.nowLoadingImage = document.getElementById('cfg-now-loading-img').value.trim();
   const res = await saveConfig();
 
   const msg = document.getElementById('site-msg');
@@ -519,6 +521,7 @@ function getDefaultConfig() {
     heroTitle: '🌸 星辰桑切片站 🌸',
     description: '收录星辰桑的所有可爱切片，愿你喜欢 ✨',
     icon: '',
+    nowLoadingImage: '', // 详情加载提示自定义图（PNG URL，留空为 NowLoading 文字；仅 PC 生效）
     passwordHash: hashPassword('20090329'),
     categories: ['歌切', '整活', '未分类'],
     questionnaires: [],
