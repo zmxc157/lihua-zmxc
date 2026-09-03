@@ -164,6 +164,11 @@
             <label class="label">网站图标 URL（SVG/PNG，填入链接或留空）</label>
             <input type="text" id="cfg-icon" class="input" placeholder="https://..." />
           </div>
+          <div class="form-group">
+            <label class="label">详情加载提示图 URL（可选，PNG）</label>
+            <input type="text" id="cfg-now-loading-img" class="input" placeholder="留空 = 默认 NowLoading 文字（同网页字体）" />
+            <p class="form-tip">🌸 点开切片详情时右下角显示的加载提示：填入 PNG 直链即用图片（闪动效果固定），留空用默认文字。<br>仅 PC 生效；手机版固定为弹窗中央 Windows 11 风格旋转动画 + “正在加载”，不支持自定义图片。</p>
+          </div>
           <button class="btn-pink" onclick="saveSiteConfig()">💾 保存站点设置</button>
           <div id="site-msg" class="form-success" style="display:none"></div>
         </div>
