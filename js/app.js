@@ -78,20 +78,20 @@ function applySiteConfig() {
 /* ---- 创建樱花 ---- */
 function createSakuraPetals() {
   const container = document.getElementById('sakura-container');
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 16; i++) {
     const petal = document.createElement('div');
     petal.style.cssText = `
       position:absolute;width:${8+i%4*4}px;height:${6+i%3*3}px;
       background:radial-gradient(ellipse at 40% 30%,rgba(255,200,212,${0.4+i%3*0.15}),rgba(255,179,193,${0.2+i%2*0.1}));
       border-radius:50% 0 50% 0;pointer-events:none;
-      left:${i*8+i*0.5}%;top:${i*6+i*0.8}%;
+      left:${i*6.5}%;top:${i*6}%;
       transform:rotate(${i*30}deg);
     `;
     container.appendChild(petal);
   }
 
   const petals = document.getElementById('falling-petals');
-  const count = 14;
+  const count = 20;
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     p.className = 'petal';
