@@ -49,6 +49,7 @@ function getDefaultConfig() {
     title: '🌸 星辰桑切片站 🌸',
     description: '收录星辰桑的所有可爱切片，愿你喜欢 ✨',
     icon: 'assets/icons/default.svg',
+    nowLoadingImage: '', // 详情加载提示自定义图（PNG URL，留空为 NowLoading 文本；仅 PC 生效）
     password: '123456',
     passwordHash: '123456',
     questionnaires: []
@@ -77,20 +78,23 @@ function applySiteConfig() {
 
 /* ---- 创建樱花 ---- */
 function createSakuraPetals() {
-  // 仅动态飘落樱花（不使用静态点缀花瓣）
+  // 仅动态飘落樱花（不使用静态点缀花瓣）——密度按动漫盛开季效果
   const petals = document.getElementById('falling-petals');
-  const count = 20;
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  const count = isMobile ? 30 : 48; // 手机略减以保流畅，PC 满屏花海
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     p.className = 'petal';
     p.style.left = (Math.random() * 100) + '%';
-    const size = 10 + Math.random() * 10;
-    p.style.width = size + 'px';
-    p.style.height = (size * 0.7) + 'px';
-    p.style.animationDuration = (10 + Math.random() * 8) + 's,' + (3 + Math.random() * 3) + 's';
-    p.style.animationDelay = (Math.random() * 12) + 's,0s';
-    p.style.opacity = 0.3 + Math.random() * 0.4;
-    p.style.filter = 'blur(' + (Math.random() * 0.5) + 'px)';
+    const size = (isMobile ? 6 : 8) + Math.random() * (isMobile ? 12 : 15); // 大小错落更自然
+    p.style.width = size.toFixed(1) + 'px';
+    p.style.height = Math.round(size * 0.72) + 'px';
+    const fallDur = (isMobile ? 7 : 6.5) + Math.random() * (isMobile ? 7 : 6.5);
+    const swayDur = 2.5 + Math.random() * 3.5;
+    p.style.animationDuration = fallDur.toFixed(1) + 's,' + swayDur.toFixed(1) + 's';
+    p.style.animationDelay = (Math.random() * 14).toFixed(1) + 's,0s';
+    p.style.opacity = (0.4 + Math.random() * 0.45).toFixed(2);
+    if (i % 3 === 0) p.style.filter = 'blur(' + (Math.random() * 1).toFixed(2) + 'px)'; // 三分之一带轻微景深
     petals.appendChild(p);
   }
 }
@@ -126,7 +130,7 @@ function getFilteredSlices() {
   });
 }
 
-/* ---- 渲染切片（含翻页，每页 5 个） ---- */
+/* ---- 渲染切片（含翻页，每页 6 个） ---- */
 function renderSlices() {
   const grid = document.getElementById('slices-grid');
   const empty = document.getElementById('empty-state');
@@ -228,11 +232,39 @@ async function loadZtFont() {
   }
 }
 
-/* ---- 切片详情弹窗 ---- */
-function openSliceDetail(id) {
-  const s = slices.find(x => x.id === id);
-  if (!s) return;
-  const modal = document.getElementById('detail-modal');
+/* ---- 切片详情弹窗（加载提示 → 自适应弹窗 + 滚动进度条） ---- */
+let detailTimer = null;
+
+function isMobileView() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+/* PC：右下角 NowLoading（文本或服务端指定 PNG，循环闪动为写死效果） */
+function showNowLoading() {
+  const box = document.getElementById('now-loading');
+  if (!box) return;
+  const img = (siteConfig.nowLoadingImage || '').trim();
+  box.textContent = '';
+  if (img) {
+    const im = document.createElement('img');
+    im.className = 'now-loading-img';
+    im.src = img;
+    im.alt = 'NowLoading';
+    im.onerror = () => { box.textContent = 'NowLoading'; }; // 图片失效自动回退文本
+    box.appendChild(im);
+  } else {
+    box.textContent = 'NowLoading';
+  }
+  box.classList.add('show');
+}
+
+function hideNowLoading() {
+  const box = document.getElementById('now-loading');
+  if (box) box.classList.remove('show');
+}
+
+/* 填充弹窗实际内容 */
+function fillDetailContent(s) {
   const cover = document.getElementById('detail-cover');
   if (s.cover) {
     cover.style.backgroundImage = `url('${escAttr(s.cover)}')`;
@@ -252,7 +284,78 @@ function openSliceDetail(id) {
     ? `<audio class="slice-audio" controls src="${escAttr(s.audio)}"><source src="${escAttr(s.audio)}" type="audio/mpeg"></audio>`
     : `<div class="slice-no-audio">🎧 暂无试听音频</div>`;
   document.getElementById('detail-watch').onclick = () => openExternalLink(s.url);
+}
+
+/* 显示弹窗（切到内容态）并校准滚动进度条 */
+function showDetailModal() {
+  document.getElementById('detail-loading').style.display = 'none';
+  document.getElementById('detail-content').style.display = 'block';
+  const modal = document.getElementById('detail-modal');
   modal.style.display = 'flex';
+  const sc = document.getElementById('detail-scroll');
+  sc.scrollTop = 0;
+  requestAnimationFrame(updateDetailScroll);
+  setTimeout(updateDetailScroll, 350); // 音频等延迟布局后再校准一次
+}
+
+function hideDetailModal() {
+  const modal = document.getElementById('detail-modal');
+  modal.style.display = 'none';
+  const sc = document.getElementById('detail-scroll');
+  if (sc) sc.scrollTop = 0;
+  const bar = document.getElementById('detail-progress-bar');
+  if (bar) bar.style.width = '0%';
+}
+
+function cancelPendingDetail() {
+  if (detailTimer) { clearTimeout(detailTimer); detailTimer = null; }
+  hideNowLoading();
+}
+
+/* 关闭详情（加载中也会取消定时器） */
+function closeDetailModal() {
+  cancelPendingDetail();
+  hideDetailModal();
+}
+
+/* 滚动进度条：内容超高可滚动时显示，随滚动更新百分比 */
+function updateDetailScroll() {
+  const sc = document.getElementById('detail-scroll');
+  const bar = document.getElementById('detail-progress-bar');
+  const card = document.querySelector('#detail-modal .modal-card');
+  if (!sc || !bar || !card) return;
+  const maxScroll = sc.scrollHeight - sc.clientHeight;
+  const overflow = maxScroll > 4;
+  card.classList.toggle('has-scroll', overflow);
+  bar.style.width = overflow ? (sc.scrollTop / maxScroll * 100).toFixed(2) + '%' : '0%';
+}
+
+/* 查看切片详情：先出 1-3s 加载提示（PC 右下角 NowLoading / 手机弹窗中央旋转），结束才显示弹窗内容 */
+function openSliceDetail(id) {
+  const s = slices.find(x => x.id === id);
+  if (!s || detailTimer) return; // 加载提示期间忽略重复点击
+  hideNowLoading();
+  const delay = 1000 + Math.random() * 2000; // 1~3s
+  if (isMobileView()) {
+    // 手机版：弹窗中央 Windows 11 风格旋转动画 + 正在加载文本
+    document.getElementById('detail-content').style.display = 'none';
+    document.getElementById('detail-loading').style.display = 'flex';
+    document.getElementById('detail-modal').style.display = 'flex';
+    detailTimer = setTimeout(() => {
+      detailTimer = null;
+      fillDetailContent(s);
+      showDetailModal();
+    }, delay);
+  } else {
+    // PC 版：右下角 NowLoading（自定义 PNG 或默认同网页字体文本，闪动）
+    showNowLoading();
+    detailTimer = setTimeout(() => {
+      detailTimer = null;
+      hideNowLoading();
+      fillDetailContent(s);
+      showDetailModal();
+    }, delay);
+  }
 }
 
 /* ---- 外部链接提示 ---- */
@@ -309,17 +412,20 @@ function setupEventListeners() {
       document.getElementById('external-modal').style.display = 'none';
   };
 
-  // 切片详情弹窗
-  document.getElementById('detail-modal-close').onclick = () => {
-    document.getElementById('detail-modal').style.display = 'none';
-  };
-  document.getElementById('detail-cancel').onclick = () => {
-    document.getElementById('detail-modal').style.display = 'none';
-  };
+  // 切片详情弹窗（含加载中取消）
+  document.getElementById('detail-modal-close').onclick = closeDetailModal;
+  document.getElementById('detail-cancel').onclick = closeDetailModal;
   document.getElementById('detail-modal').onclick = (e) => {
-    if (e.target === e.currentTarget)
-      document.getElementById('detail-modal').style.display = 'none';
+    if (e.target === e.currentTarget) closeDetailModal();
   };
+  const detailScroll = document.getElementById('detail-scroll');
+  if (detailScroll) detailScroll.addEventListener('scroll', updateDetailScroll, { passive: true });
+  // Esc 关闭详情
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('detail-modal').style.display !== 'none') {
+      closeDetailModal();
+    }
+  });
 
   // 问卷浮动按钮
   const fab = document.getElementById('questionnaire-fab');
