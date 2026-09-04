@@ -17,8 +17,8 @@
       "title": "测试",
       "url": "https://zmxc157.github.io/lihua-zmxc/",
       "description": "测试说明",
-      "position": "fab",
-      "showFab": true
+      "position": "list-top",
+      "showFab": false
     }
   ],
   "github": {
