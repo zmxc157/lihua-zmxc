@@ -491,6 +491,22 @@ function attemptShowNews() {
   showNewsModal();
 }
 
+/* 公告弹窗左上角图标：支持 Emoji/文字 或 图片直链 URL；留空用默认 🌸 */
+function applyNewsLogo(logo) {
+  const el = document.getElementById('news-logo');
+  if (!el) return;
+  logo = (logo || '').trim();
+  if (!logo) { el.textContent = '🌸'; el.classList.remove('is-img'); return; }
+  const isUrl = /^(https?:)?\/\//i.test(logo) || /^data:image\//i.test(logo) || /\.(png|jpe?g|gif|webp|svg|ico)(\?.*)?$/i.test(logo);
+  if (isUrl) {
+    el.innerHTML = '<img src="' + escHtml(logo) + '" alt="NEWS" onerror="this.outerHTML=&quot;🌸&quot;" />';
+    el.classList.add('is-img');
+  } else {
+    el.textContent = logo;
+    el.classList.remove('is-img');
+  }
+}
+
 function showNewsModal() {
   const modal = document.getElementById('news-modal');
   if (!modal) return;
@@ -503,6 +519,7 @@ function showNewsModal() {
   setTimeout(() => {
     if (loading) loading.style.display = 'none';
     if (main) main.style.display = 'block';
+    applyNewsLogo(newsData && newsData.logo);
     renderNewsTabs();
     renderNewsList();
     // 默认打开第一条（若有）
@@ -583,7 +600,7 @@ async function openNewsDetail(id) {
   try {
     const r = await fetch('_data/news/' + encodeURIComponent(id) + '.html?t=' + Date.now());
     if (!r.ok) throw new Error('not found');
-    const html = await r.text();
+    const html = nl2brHtml(await r.text());
     detail.innerHTML = `<div class="news-article">
       <div class="news-article-meta">${escHtml(it.date || '')}</div>
       <h2 class="news-article-title">${escHtml(it.title || '')}</h2>
@@ -681,6 +698,19 @@ function escHtml(str) {
 function escAttr(str) {
   if (!str) return '';
   return String(str).replace(/"/g, '&quot;');
+}
+
+/* 把正文中的裸换行（标签外的 \n）转为 <br>，避免 HTML 渲染时换行丢失。幂等：已含 <br> 的内容不受影响 */
+function nl2brHtml(html) {
+  if (!html) return '';
+  let s = String(html).replace(/\r\n/g, '\n');
+  // 保护标签内部（属性）的换行，防止误转
+  s = s.replace(/<[^>]*>/g, m => m.replace(/\n/g, '\u0000'));
+  // 块级标签边界处的源码排版换行（> 与 < 之间）直接删除，不产生多余空行
+  s = s.replace(/>\n(?=\s*<)/g, '>');
+  // 其余换行 = 用户换行 → <br>
+  s = s.replace(/\n/g, '<br>');
+  return s.replace(/\u0000/g, '\n');
 }
 
 function setStorage(k, v) {
