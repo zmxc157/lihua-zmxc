@@ -801,6 +801,8 @@ body::before {
 .news-head::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 85% -40%, rgba(255,255,255,0.35), transparent 55%); pointer-events: none; }
 .news-title-wrap { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
 .news-logo { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); }
+.news-logo img { width: 28px; height: 28px; object-fit: contain; border-radius: 8px; display: block; }
+.news-logo.is-img { background: rgba(255,255,255,0.85); }
 .news-name { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; text-shadow: 0 1px 4px rgba(0,0,0,0.15); }
 .news-sub { font-size: 0.68rem; opacity: 0.85; letter-spacing: 0.6px; margin-top: 1px; }
 .news-close { position: relative; z-index: 1; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
