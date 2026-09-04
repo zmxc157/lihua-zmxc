@@ -228,6 +228,11 @@
             </div>
             <p class="deploy-tip" style="margin-top:8px">删除类型后，该类型下的公告自动归入「📢 公告」。类型调整记得点下方「推送」同步线上。</p>
           </details>
+          <div class="form-row" style="align-items:center;gap:10px;margin-top:12px">
+            <label class="label" style="margin:0;white-space:nowrap">🖼️ 公告栏图标</label>
+            <input type="text" id="news-logo-input" class="input" placeholder="留空 = 默认 🌸；可填任意 Emoji，或图片直链 URL" style="flex:1;min-width:160px" autocomplete="off" />
+            <span class="deploy-tip" style="margin:0">前台公告弹窗左上角图标，点下方「推送」后生效</span>
+          </div>
           <div class="form-row" style="margin-top:14px">
             <button class="btn-pink btn-sm" onclick="applyNewsToGithub()">🚀 推送至 GitHub（保存全部公告到 _data/news/）</button>
             <span id="news-msg" class="form-success" style="display:none;margin-left:10px"></span>
