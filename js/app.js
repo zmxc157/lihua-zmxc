@@ -449,6 +449,9 @@ function setupEventListeners() {
       if (e.target === e.currentTarget) closeNewsModal();
     };
   }
+  // 手机二级页「返回列表」按钮
+  const newsBackBtn = document.getElementById('news-back-btn');
+  if (newsBackBtn) newsBackBtn.onclick = backNewsList;
   // Esc 关闭 NEWS（若开着）
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -462,6 +465,8 @@ function setupEventListeners() {
 let newsData = null;      // { types:[{key,label}], items:[{id,type,title,date}] }
 let newsActiveTab = 'all';
 let newsTimer = null;
+let newsDetailTimer = null; // 手机二级页正文加载特效计时器
+let newsOpenSeq = 0;        // 详情请求序号（防止过期请求渲染覆盖）
 
 async function initNewsSystem() {
   try {
@@ -515,6 +520,8 @@ function showNewsModal() {
   if (loading) loading.style.display = 'flex';
   if (main) main.style.display = 'none';
   modal.style.display = 'flex';
+  modal.classList.remove('news-level-detail'); // 每次打开从一级列表页开始（手机）
+  if (isMobileView()) document.body.style.overflow = 'hidden'; // 防背景滚动穿透
   // 加载动画至少展示 1s，再填充内容
   setTimeout(() => {
     if (loading) loading.style.display = 'none';
@@ -522,11 +529,33 @@ function showNewsModal() {
     applyNewsLogo(newsData && newsData.logo);
     renderNewsTabs();
     renderNewsList();
-    // 默认打开第一条（若有）
-    const items = getNewsItems();
-    if (items.length) openNewsDetail(items[0].id);
-    else document.getElementById('news-detail').innerHTML = '<div class="news-detail-empty">暂无内容 ✨</div>';
+    const scrollEl = document.getElementById('news-detail-scroll');
+    if (!isMobileView()) {
+      // 桌面：双栏布局，默认打开第一条
+      const items = getNewsItems();
+      if (items.length) openNewsDetail(items[0].id);
+      else if (scrollEl) scrollEl.innerHTML = '<div class="news-detail-empty">暂无内容 ✨</div>';
+    } else if (scrollEl) {
+      // 手机：停留一级列表页，点公告才进二级
+      scrollEl.innerHTML = '<div class="news-detail-empty">👈 点击上方公告查看详情</div>';
+    }
   }, 1000);
+}
+
+/* 手机端两级菜单切换：list=一级公告列表页，detail=二级正文页（桌面端无效果） */
+function setNewsLevel(level) {
+  const modal = document.getElementById('news-modal');
+  if (!modal) return;
+  modal.classList.toggle('news-level-detail', level === 'detail');
+}
+
+/* 手机端：从二级正文页返回一级公告列表 */
+function backNewsList() {
+  if (newsDetailTimer) { clearTimeout(newsDetailTimer); newsDetailTimer = null; }
+  newsOpenSeq++; // 作废挂起的正文渲染
+  setNewsLevel('list');
+  const scrollEl = document.getElementById('news-detail-scroll');
+  if (scrollEl) scrollEl.innerHTML = '<div class="news-detail-empty">👈 点击上方公告查看详情</div>';
 }
 
 function getNewsItems() {
@@ -552,9 +581,10 @@ function renderNewsTabs() {
       newsActiveTab = btn.getAttribute('data-k');
       renderNewsTabs();
       renderNewsList();
+      if (isMobileView()) return; // 手机：切分类后停留一级列表页
       const items = getNewsItems();
-      const detail = document.getElementById('news-detail');
-      if (detail) detail.innerHTML = '<div class="news-detail-empty">👈 选择左侧一条消息查看详情</div>';
+      const scrollEl = document.getElementById('news-detail-scroll');
+      if (scrollEl) scrollEl.innerHTML = '<div class="news-detail-empty">👈 选择左侧一条消息查看详情</div>';
       if (items.length) openNewsDetail(items[0].id);
     };
   });
@@ -589,32 +619,82 @@ function renderNewsList() {
 
 async function openNewsDetail(id) {
   const detail = document.getElementById('news-detail');
-  if (!detail) return;
+  const scrollEl = document.getElementById('news-detail-scroll');
+  if (!detail || !scrollEl) return;
   // 高亮当前项
   document.querySelectorAll('#news-list .news-item').forEach(el => {
     el.classList.toggle('active', el.getAttribute('data-id') === id);
   });
   const it = (newsData.items || []).find(x => x.id === id);
   if (!it) return;
-  detail.innerHTML = '<div class="news-detail-loading"><div class="win-spinner"></div><p>正在加载正文…</p></div>';
+  const seq = ++newsOpenSeq;
+
+  if (isMobileView()) {
+    // —— 手机：进入二级正文页（返回条常驻顶栏 + 加载特效 0.9~2s + 独立滚动）——
+    setNewsLevel('detail');
+    const barTitle = document.getElementById('news-back-title');
+    if (barTitle) barTitle.textContent = it.title || '';
+    scrollEl.innerHTML = '<div class="news-detail-loading"><div class="win-spinner"></div><p>正在加载正文…</p></div>';
+    scrollEl.scrollTop = 0;
+    // 真实拉取与人工加载延迟并行：保证加载动画可感知
+    const delay = 900 + Math.random() * 1100; // 0.9~2s
+    const p = fetch('_data/news/' + encodeURIComponent(id) + '.html?t=' + Date.now())
+      .then(r => (r.ok ? r.text() : null)).catch(() => null);
+    newsDetailTimer = setTimeout(async () => {
+      newsDetailTimer = null;
+      const modal = document.getElementById('news-modal');
+      if (seq !== newsOpenSeq) return;                    // 已被更新点击/返回取代
+      if (!modal || modal.style.display === 'none') return; // 弹窗已关闭
+      const raw = await p;
+      if (seq !== newsOpenSeq) return;
+      if (raw == null) {
+        scrollEl.innerHTML = '<div class="news-detail-empty">正文加载失败（_data/news/' + escHtml(id) + '.html 不存在？）</div>';
+        return;
+      }
+      scrollEl.innerHTML = `<div class="news-article">
+        <div class="news-article-meta">${escHtml(it.date || '')}</div>
+        <h2 class="news-article-title">${escHtml(it.title || '')}</h2>
+        <div class="news-article-body">${nl2brHtml(raw)}</div>
+      </div>`;
+      scrollEl.scrollTop = 0;
+    }, delay);
+    return;
+  }
+
+  // —— 桌面：右栏直接加载正文（超高时右栏内部滚动），最小展示 400ms 加载态 ——
+  scrollEl.innerHTML = '<div class="news-detail-loading"><div class="win-spinner"></div><p>正在加载正文…</p></div>';
+  scrollEl.scrollTop = 0;
   try {
-    const r = await fetch('_data/news/' + encodeURIComponent(id) + '.html?t=' + Date.now());
-    if (!r.ok) throw new Error('not found');
-    const html = nl2brHtml(await r.text());
-    detail.innerHTML = `<div class="news-article">
+    const minWait = new Promise(res => setTimeout(res, 400));
+    const [resp] = await Promise.all([
+      fetch('_data/news/' + encodeURIComponent(id) + '.html?t=' + Date.now()),
+      minWait
+    ]);
+    if (!resp.ok) throw new Error('not found');
+    const html = nl2brHtml(await resp.text());
+    if (seq !== newsOpenSeq) return;
+    scrollEl.innerHTML = `<div class="news-article">
       <div class="news-article-meta">${escHtml(it.date || '')}</div>
       <h2 class="news-article-title">${escHtml(it.title || '')}</h2>
       <div class="news-article-body">${html}</div>
     </div>`;
+    scrollEl.scrollTop = 0;
   } catch(e) {
-    detail.innerHTML = '<div class="news-detail-empty">正文加载失败（_data/news/' + escHtml(id) + '.html 不存在？）</div>';
+    if (seq !== newsOpenSeq) return;
+    scrollEl.innerHTML = '<div class="news-detail-empty">正文加载失败（_data/news/' + escHtml(id) + '.html 不存在？）</div>';
   }
 }
 
 function closeNewsModal() {
   if (newsTimer) { clearTimeout(newsTimer); newsTimer = null; }
+  if (newsDetailTimer) { clearTimeout(newsDetailTimer); newsDetailTimer = null; }
+  newsOpenSeq++; // 作废挂起的正文渲染
   const modal = document.getElementById('news-modal');
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('news-level-detail'); // 下次打开回到一级列表页（手机）
+  }
+  document.body.style.overflow = '';
 }
 
 /* ---- 问卷处理 ---- */
