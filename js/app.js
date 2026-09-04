@@ -35,10 +35,14 @@ async function initSite() {
   renderFilters();
   // 渲染切片
   renderSlices();
+  // 内嵌问卷（列表顶部/底部位置）
+  renderInlineQuestionnaires();
   // 问卷弹窗
   checkModalQuestionnaire();
   // 问卷浮动按钮
   renderQuestionnaireFab();
+  // 星辰NEWS 公告（每次访问弹窗，弹出前 1-3s 加载效果）
+  initNewsSystem();
   // 事件监听
   setupEventListeners();
 }
@@ -435,42 +439,232 @@ function setupEventListeners() {
       if (activeQ) openQuestionnaire(activeQ);
     };
   }
+
+  // 星辰NEWS 弹窗关闭
+  const newsModalClose = document.getElementById('news-modal-close');
+  if (newsModalClose) newsModalClose.onclick = closeNewsModal;
+  const newsModalEl = document.getElementById('news-modal');
+  if (newsModalEl) {
+    newsModalEl.onclick = (e) => {
+      if (e.target === e.currentTarget) closeNewsModal();
+    };
+  }
+  // Esc 关闭 NEWS（若开着）
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const nm = document.getElementById('news-modal');
+      if (nm && nm.style.display !== 'none') closeNewsModal();
+    }
+  });
+}
+
+/* ---- 星辰NEWS（公告/活动/异常弹窗，每次访问弹出，弹出前 1-3s 加载效果） ---- */
+let newsData = null;      // { types:[{key,label}], items:[{id,type,title,date}] }
+let newsActiveTab = 'all';
+let newsTimer = null;
+
+async function initNewsSystem() {
+  try {
+    const r = await fetch('_data/news/index.json?t=' + Date.now());
+    if (!r.ok) return;
+    newsData = await r.json();
+  } catch(e) { newsData = null; }
+  if (!newsData || !newsData.items || !newsData.items.length) return; // 无公告不打扰
+  // 每次访问都弹（刷新也弹）；延迟 1-3s 先展示加载动画再显示内容
+  const delay = 1000 + Math.random() * 2000;
+  newsTimer = setTimeout(() => {
+    newsTimer = null;
+    attemptShowNews();
+  }, delay);
+}
+
+/* 若用户正在看详情/问卷/外链弹窗，等它们关闭后再弹 NEWS，避免叠层遮挡 */
+function attemptShowNews() {
+  const busy = ['detail-modal', 'external-modal', 'modal-overlay'].some(id => {
+    const el = document.getElementById(id);
+    return el && el.style.display !== 'none';
+  });
+  if (busy) {
+    newsTimer = setTimeout(attemptShowNews, 700); // 稍后再试
+    return;
+  }
+  showNewsModal();
+}
+
+function showNewsModal() {
+  const modal = document.getElementById('news-modal');
+  if (!modal) return;
+  const loading = document.getElementById('news-loading');
+  const main = document.getElementById('news-main');
+  if (loading) loading.style.display = 'flex';
+  if (main) main.style.display = 'none';
+  modal.style.display = 'flex';
+  // 加载动画至少展示 1s，再填充内容
+  setTimeout(() => {
+    if (loading) loading.style.display = 'none';
+    if (main) main.style.display = 'block';
+    renderNewsTabs();
+    renderNewsList();
+    // 默认打开第一条（若有）
+    const items = getNewsItems();
+    if (items.length) openNewsDetail(items[0].id);
+    else document.getElementById('news-detail').innerHTML = '<div class="news-detail-empty">暂无内容 ✨</div>';
+  }, 1000);
+}
+
+function getNewsItems() {
+  if (!newsData) return [];
+  const all = newsData.items || [];
+  if (newsActiveTab === 'all') return all;
+  return all.filter(it => it.type === newsActiveTab);
+}
+
+function renderNewsTabs() {
+  const box = document.getElementById('news-tabs');
+  if (!box) return;
+  const types = newsData.types || [];
+  const typeLabel = {};
+  types.forEach(t => { typeLabel[t.key] = t.label; });
+  const typeEmoji = k => (typeLabel[k] || k).replace(/[^\p{Emoji}]/gu, '').trim() || '📌';
+  const tabs = [{ key: 'all', label: '✨ 全部' }].concat(types.map(t => ({ key: t.key, label: t.label })));
+  box.innerHTML = tabs.map(t => `
+    <button type="button" class="news-tab ${newsActiveTab === t.key ? 'active' : ''}" data-k="${escAttr(t.key)}">${escHtml(t.label)}</button>`
+  ).join('');
+  box.querySelectorAll('.news-tab').forEach(btn => {
+    btn.onclick = () => {
+      newsActiveTab = btn.getAttribute('data-k');
+      renderNewsTabs();
+      renderNewsList();
+      const items = getNewsItems();
+      const detail = document.getElementById('news-detail');
+      if (detail) detail.innerHTML = '<div class="news-detail-empty">👈 选择左侧一条消息查看详情</div>';
+      if (items.length) openNewsDetail(items[0].id);
+    };
+  });
+}
+
+function renderNewsList() {
+  const box = document.getElementById('news-list');
+  if (!box) return;
+  const items = getNewsItems();
+  const types = newsData.types || [];
+  const typeLabel = {};
+  types.forEach(t => { typeLabel[t.key] = t.label; });
+  if (!items.length) {
+    box.innerHTML = '<div class="news-list-empty">该分类暂无消息</div>';
+    return;
+  }
+  box.innerHTML = items.map(it => {
+    const badge = typeLabel[it.type] || it.type || '📌';
+    return `<div class="news-item" data-id="${escAttr(it.id)}" role="button" tabindex="0">
+      <span class="news-item-badge">${escHtml(badge)}</span>
+      <div class="news-item-main">
+        <div class="news-item-title">${escHtml(it.title || '(无标题)')}</div>
+        <div class="news-item-date">${escHtml(it.date || '')}</div>
+      </div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.news-item').forEach(el => {
+    el.onclick = () => openNewsDetail(el.getAttribute('data-id'));
+    el.onkeydown = (e) => { if (e.key === 'Enter') openNewsDetail(el.getAttribute('data-id')); };
+  });
+}
+
+async function openNewsDetail(id) {
+  const detail = document.getElementById('news-detail');
+  if (!detail) return;
+  // 高亮当前项
+  document.querySelectorAll('#news-list .news-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-id') === id);
+  });
+  const it = (newsData.items || []).find(x => x.id === id);
+  if (!it) return;
+  detail.innerHTML = '<div class="news-detail-loading"><div class="win-spinner"></div><p>正在加载正文…</p></div>';
+  try {
+    const r = await fetch('_data/news/' + encodeURIComponent(id) + '.html?t=' + Date.now());
+    if (!r.ok) throw new Error('not found');
+    const html = await r.text();
+    detail.innerHTML = `<div class="news-article">
+      <div class="news-article-meta">${escHtml(it.date || '')}</div>
+      <h2 class="news-article-title">${escHtml(it.title || '')}</h2>
+      <div class="news-article-body">${html}</div>
+    </div>`;
+  } catch(e) {
+    detail.innerHTML = '<div class="news-detail-empty">正文加载失败（_data/news/' + escHtml(id) + '.html 不存在？）</div>';
+  }
+}
+
+function closeNewsModal() {
+  if (newsTimer) { clearTimeout(newsTimer); newsTimer = null; }
+  const modal = document.getElementById('news-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 /* ---- 问卷处理 ---- */
 function getActiveQuestionnaire() {
   if (!siteConfig.questionnaires) return null;
-  return siteConfig.questionnaires.find(q => q.showFab);
+  return siteConfig.questionnaires.find(q => q.position === 'fab' || q.showFab);
 }
 
+/* 自动弹出：modal 位置的问卷，每天最多自动弹一次（避免骚扰，但关闭浏览器隔天再来会再弹） */
 function checkModalQuestionnaire() {
   const qList = siteConfig.questionnaires || [];
   const modalQ = qList.find(q => q.position === 'modal');
   if (!modalQ) return;
-  if (getStorage('zmxc_modal_' + modalQ.id)) return; // 已弹过
+  const today = new Date().toISOString().slice(0, 10);
+  if (getStorage('zmxc_modal_' + modalQ.id + '_' + today)) return; // 今日已弹过
   setTimeout(() => openQuestionnaire(modalQ), 600);
-  setStorage('zmxc_modal_' + modalQ.id, '1');
+  setStorage('zmxc_modal_' + modalQ.id + '_' + today, '1');
 }
 
+/* 打开问卷：统一弹窗展示（含说明与前往填写按钮） */
 function openQuestionnaire(q) {
   if (!q.url) return;
-  if (q.position === 'modal') {
-    document.getElementById('modal-title').textContent = q.title || '问卷调查';
-    document.getElementById('modal-body').textContent = q.description || '请填写以下问卷';
-    document.getElementById('modal-link').href = q.url;
-    document.getElementById('modal-overlay').style.display = 'flex';
-  } else {
-    window.open(q.url, '_blank', 'noopener,noreferrer');
-  }
+  document.getElementById('modal-title').textContent = q.title || '问卷调查';
+  document.getElementById('modal-body').textContent = q.description || '请填写以下问卷';
+  document.getElementById('modal-link').href = q.url;
+  document.getElementById('modal-overlay').style.display = 'flex';
 }
 
 function renderQuestionnaireFab() {
-  const fabQ = siteConfig.questionnaires?.find(q => q.position === 'fab');
+  const fabQ = siteConfig.questionnaires?.find(q => q.position === 'fab' || q.showFab);
   if (!fabQ) return;
   const fab = document.getElementById('questionnaire-fab');
   if (!fab) return;
   fab.style.display = 'flex';
   fab.title = fabQ.title || '问卷';
+  const txt = fab.querySelector('.q-fab-text');
+  if (txt) txt.textContent = (fabQ.title || '问卷').slice(0, 6);
+}
+
+/* 内嵌问卷：list-top / list-bottom 位置渲染为页面内的问卷卡片（点击卡片弹窗） */
+function renderInlineQuestionnaires() {
+  const qList = siteConfig.questionnaires || [];
+  const topBox = document.getElementById('inline-q-top');
+  const bottomBox = document.getElementById('inline-q-bottom');
+  if (!topBox && !bottomBox) return;
+  if (topBox) topBox.innerHTML = '';
+  if (bottomBox) bottomBox.innerHTML = '';
+  qList.forEach(q => {
+    const card = `<div class="inline-q-card" role="button" tabindex="0"
+      data-qid="${escAttr(q.id || '')}">
+      <div class="inline-q-ico">🌸</div>
+      <div class="inline-q-info">
+        <div class="inline-q-title">${escHtml(q.title || '问卷调查')}</div>
+        <div class="inline-q-desc">${escHtml(q.description || '请填写以下问卷')}</div>
+      </div>
+      <button type="button" class="btn-pink inline-q-btn" onclick="openQuestionnaireById('${escAttr(q.id || '')}')">前往填写 →</button>
+    </div>`;
+    if (q.position === 'list-top' && topBox) topBox.insertAdjacentHTML('beforeend', card);
+    else if (q.position === 'list-bottom' && bottomBox) bottomBox.insertAdjacentHTML('beforeend', card);
+  });
+}
+
+/* 供内嵌卡片按钮调用：按 id 找问卷并弹窗 */
+function openQuestionnaireById(id) {
+  const q = (siteConfig.questionnaires || []).find(x => String(x.id) === String(id));
+  if (q) openQuestionnaire(q);
+  else window.open('#');
 }
 
 /* ---- 工具函数 ---- */
@@ -500,3 +694,5 @@ function getStorage(k) {
 window.openExternalLink = openExternalLink;
 window.openSliceDetail = openSliceDetail;
 window.escHtml = escHtml;
+window.openQuestionnaireById = openQuestionnaireById;
+window.closeNewsModal = closeNewsModal;
