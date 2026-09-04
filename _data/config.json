@@ -11,16 +11,7 @@
     "未分类",
     "弹唱"
   ],
-  "questionnaires": [
-    {
-      "id": "q-1788504161384",
-      "title": "测试",
-      "url": "https://zmxc157.github.io/lihua-zmxc/",
-      "description": "测试说明",
-      "position": "list-top",
-      "showFab": false
-    }
-  ],
+  "questionnaires": [],
   "github": {
     "owner": "zmxc157",
     "repo": "lihua-zmxc",
