@@ -175,11 +175,75 @@
       </div>
     </section>
 
+    <!-- 账号设置（密码 + 星辰NEWS 公告/更新日志） -->
+    <section id="tab-account" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">🔑 账号设置</h2>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>🔐 修改登录密码</h3></div>
+        <div class="card-body">
+          <p class="deploy-tip">🔐 修改后台登录密码（不少于 6 位）。修改后将立即保存到本地和 GitHub 仓库。</p>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="label">新密码 <span class="required">*</span></label>
+              <input type="password" id="acc-new-pw" class="input" placeholder="新密码（≥6 位）" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+              <label class="label">确认新密码 <span class="required">*</span></label>
+              <input type="password" id="acc-new-pw2" class="input" placeholder="再次输入新密码" autocomplete="new-password" />
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:14px">
+            <button class="btn-pink" onclick="saveAccount()">💾 保存新密码</button>
+          </div>
+          <div id="acc-msg" class="form-success" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- 星辰NEWS：公告/活动/异常 管理（前台每次访问弹窗展示） -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📰 星辰NEWS <span class="badge" id="news-count"></span></h3>
+          <div style="display:flex;gap:10px">
+            <button class="btn-outline btn-sm" onclick="loadNews()">🔄 从 GitHub 刷新</button>
+            <button class="btn-pink btn-sm" onclick="openAddNewsModal()">+ 添加公告</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="deploy-tip">
+            🌸 <b>星辰NEWS</b>：前台弹窗公告系统（参考蔚蓝档案官方公告）。每条公告 = 标题 + 类型（📢 公告 / 🎁 活动 / ⚠️ 异常，可增减调整）+ 日期 + <b>HTML 正文</b>。
+            <br>前台<b>每次访问网站</b>都会弹窗展示，弹出前带 1-3s 加载效果。保存后在卡片下方点击「🚀 推送至 GitHub」即全站生效。
+            <br>📝 正文采用 HTML 生成逻辑，编辑框支持常用标签，图片/直链可到「🗂️ 文件管理」上传获取。
+          </p>
+          <div id="news-list"></div>
+          <div id="news-empty" class="empty-inline">暂无公告，点击右上角添加</div>
+          <details class="news-type-manage" open>
+            <summary>🏷️ 类型管理（公告 / 活动 / 异常，可增减调整）</summary>
+            <div id="news-type-list" class="news-type-list"></div>
+            <div class="news-type-add">
+              <input type="text" id="news-type-key" class="input" placeholder="key（英文，如 maintenance）" style="flex:1;min-width:120px" />
+              <input type="text" id="news-type-label" class="input" placeholder="显示名（如 🛠️ 维护）" style="flex:1;min-width:120px" />
+              <button type="button" class="btn-outline btn-sm" onclick="addNewsType()">+ 添加类型</button>
+            </div>
+            <p class="deploy-tip" style="margin-top:8px">删除类型后，该类型下的公告自动归入「📢 公告」。类型调整记得点下方「推送」同步线上。</p>
+          </details>
+          <div class="form-row" style="margin-top:14px">
+            <button class="btn-pink btn-sm" onclick="applyNewsToGithub()">🚀 推送至 GitHub（保存全部公告到 _data/news/）</button>
+            <span id="news-msg" class="form-success" style="display:none;margin-left:10px"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 问卷管理 -->
     <section id="tab-questionnaire" class="tab-content">
       <div class="section-header">
         <h2 class="section-title">📝 问卷管理</h2>
-        <button class="btn-pink btn-sm" onclick="openAddQuestionnaireModal()">+ 添加问卷</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn-outline btn-sm" onclick="applyQuestionnaireToGithub()">🚀 推送至 GitHub</button>
+          <button class="btn-pink btn-sm" onclick="openAddQuestionnaireModal()">+ 添加问卷</button>
+        </div>
       </div>
       <div class="card">
         <div class="card-body">
@@ -341,6 +405,57 @@
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
           <button type="button" class="btn-outline" onclick="closeQModal()">取消</button>
           <button type="submit" class="btn-pink">💾 保存问卷</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 添加/编辑公告弹窗（星辰NEWS） -->
+  <div id="news-modal" class="modal-overlay" style="display:none">
+    <div class="modal-card modal-wide news-editor-card">
+      <button class="modal-close" onclick="closeNewsModal()">✕</button>
+      <div class="modal-sakura">📰</div>
+      <h2 class="modal-title" id="news-modal-title">添加公告</h2>
+      <form id="news-form" onsubmit="saveNews(event)">
+        <input type="hidden" id="news-index" />
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="label">类型 <span class="required">*</span></label>
+            <select id="news-type" class="input select">
+              <option value="announcement">📢 公告</option>
+              <option value="activity">🎁 活动</option>
+              <option value="issue">⚠️ 异常</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="label">日期</label>
+            <input type="date" id="news-date" class="input" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="label">标题 <span class="required">*</span></label>
+          <input type="text" id="news-title" class="input" placeholder="公告标题（显示在列表与弹窗顶部）" required />
+        </div>
+        <div class="form-group">
+          <label class="label">公告内容（HTML 生成逻辑，参考蔚蓝档案公告）</label>
+          <div class="news-toolbar">
+            <button type="button" class="tb-btn" onclick="newsWrapTag('b')" title="加粗"><b>B</b></button>
+            <button type="button" class="tb-btn" onclick="newsWrapTag('i')" title="斜体"><i>I</i></button>
+            <button type="button" class="tb-btn" onclick="newsWrapTag('u')" title="下划线"><u>U</u></button>
+            <button type="button" class="tb-btn" onclick="newsWrapTag('h2')" title="小标题">H2</button>
+            <button type="button" class="tb-btn" onclick="newsWrapTag('p')" title="段落">¶</button>
+            <button type="button" class="tb-btn" onclick="newsInsertImg()" title="插入图片">🖼️</button>
+            <button type="button" class="tb-btn" onclick="newsInsertLink()" title="插入链接">🔗</button>
+            <button type="button" class="tb-btn" onclick="newsInsertLine()" title="分割线">—</button>
+            <button type="button" class="tb-btn" onclick="newsPreview()" title="预览">👁 预览</button>
+          </div>
+          <textarea id="news-html" class="input textarea news-html-editor" rows="10" placeholder="<p>在这里用 HTML 写公告内容…</p>&#10;<p>可以插图片：&lt;img src=&quot;图片直链&quot; /&gt;</p>&#10;<p>可以加粗：&lt;b&gt;重要&lt;/b&gt;、链接：&lt;a href=&quot;https://…&quot;&gt;文字&lt;/a&gt;</p>" spellcheck="false"></textarea>
+          <div id="news-preview" class="news-preview" style="display:none"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button type="button" class="btn-outline" onclick="closeNewsModal()">取消</button>
+          <button type="button" class="btn-outline" onclick="newsPreview()">👁 预览</button>
+          <button type="submit" class="btn-pink">💾 保存公告</button>
         </div>
       </form>
     </div>
