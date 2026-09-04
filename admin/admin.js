@@ -936,6 +936,7 @@ const NEWS_TYPES = [
 ];
 let newsTypes = NEWS_TYPES.slice(); // 服务端类型，可增减调整
 let newsItems = [];   // { id, type, title, date, html }
+let newsLogo = '';    // 前台弹窗左上角图标（Emoji 或图片直链 URL，留空=默认 🌸）
 
 async function loadNews() {
   const box = document.getElementById('news-list');
@@ -945,6 +946,7 @@ async function loadNews() {
     // 尝试从线上（GitHub Pages）拉取索引，失败则用本地缓存
     const idx = await loadJSON('../_data/news/index.json');
     if (idx.types && idx.types.length) newsTypes = idx.types;
+    if (typeof idx.logo === 'string') newsLogo = idx.logo;
     newsItems = (idx.items || []).map(it => ({ id: it.id, type: it.type, title: it.title, date: it.date, html: '' }));
     // 逐条拉取正文（失败时正文留空，编辑时再取）
     for (const it of newsItems) {
@@ -953,19 +955,30 @@ async function loadNews() {
         if (r.ok) it.html = await r.text();
       } catch(e) {}
     }
-    localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+    persistNewsCache();
   } catch(e) {
     // 本地缓存回退
     try {
       const cached = JSON.parse(localStorage.getItem('zmxc_news_index') || 'null');
-      if (cached) { newsTypes = cached.types || NEWS_TYPES.slice(); newsItems = cached.items || []; }
+      if (cached) { newsTypes = cached.types || NEWS_TYPES.slice(); newsItems = cached.items || []; if (typeof cached.logo === 'string') newsLogo = cached.logo; }
     } catch(e2) {}
   }
   renderNewsList();
   renderNewsTypes();
+  syncNewsLogoInput();
   if (count) count.textContent = newsItems.length ? '(' + newsItems.length + ')' : '';
   const msg = document.getElementById('news-msg');
   if (msg) { msg.textContent = '🔄 已刷新（' + newsItems.length + ' 条）'; msg.style.display = 'inline'; setTimeout(()=>{ msg.style.display='none'; }, 2500); }
+}
+
+/* 公告数据落盘（含图标 logo） */
+function persistNewsCache() {
+  localStorage.setItem('zmxc_news_index', JSON.stringify({ logo: newsLogo, types: newsTypes, items: newsItems }));
+}
+/* 同步「公告栏图标」输入框 */
+function syncNewsLogoInput() {
+  const el = document.getElementById('news-logo-input');
+  if (el) el.value = newsLogo || '';
 }
 
 function renderNewsList() {
@@ -1037,7 +1050,7 @@ async function saveNews(e) {
     type: document.getElementById('news-type').value,
     title: document.getElementById('news-title').value.trim(),
     date: document.getElementById('news-date').value || new Date().toISOString().slice(0, 10),
-    html: document.getElementById('news-html').value
+    html: nl2brHtml(document.getElementById('news-html').value)
   };
   if (!data.title) { alert('请填写标题'); return; }
   if (idxField) {
@@ -1047,7 +1060,7 @@ async function saveNews(e) {
   }
   // 排序：按日期倒序
   newsItems.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+  persistNewsCache();
   closeNewsModal();
   renderNewsList();
   toast(idxField ? '✏️ 公告已更新（本地）' : '✅ 公告已添加（本地）');
@@ -1057,7 +1070,7 @@ async function deleteNews(index) {
   if (!confirm('确认删除该公告？\n（点击推送后线上 _data/news/ 对应 .html 与索引也会被移除）')) return;
   const it = newsItems[index];
   newsItems.splice(index, 1);
-  localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+  persistNewsCache();
   renderNewsList();
   toast('🗑️ 已删除（本地）');
 }
@@ -1080,7 +1093,7 @@ function removeNewsType(key) {
   if (!confirm('删除类型「' + key + '」？\n若已有公告使用该类型，将一并改为「公告」。')) return;
   newsTypes = newsTypes.filter(t => t.key !== key);
   newsItems.forEach(it => { if (it.type === key) it.type = 'announcement'; });
-  localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+  persistNewsCache();
   renderNewsTypes();
   renderNewsList();
   toast('🗑️ 类型已删除');
@@ -1126,9 +1139,22 @@ function insertAtCursor(ta, text) {
   ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
   ta.focus();
 }
+/* 把正文中的裸换行（标签外的 \n）转为 <br>，避免 HTML 渲染时换行丢失。幂等：已含 <br> 的内容不受影响 */
+function nl2brHtml(html) {
+  if (!html) return '';
+  let s = String(html).replace(/\r\n/g, '\n');
+  // 保护标签内部（属性）的换行，防止误转
+  s = s.replace(/<[^>]*>/g, m => m.replace(/\n/g, '\u0000'));
+  // 块级标签边界处的源码排版换行（> 与 < 之间）直接删除，不产生多余空行
+  s = s.replace(/>\n(?=\s*<)/g, '>');
+  // 其余换行 = 用户换行 → <br>
+  s = s.replace(/\n/g, '<br>');
+  return s.replace(/\u0000/g, '\n');
+}
 function newsPreview() {
   const pv = document.getElementById('news-preview');
-  pv.innerHTML = document.getElementById('news-html').value || '<p style="color:#999">（空内容）</p>';
+  const raw = document.getElementById('news-html').value;
+  pv.innerHTML = raw ? nl2brHtml(raw) : '<p style="color:#999">（空内容）</p>';
   pv.style.display = 'block';
 }
 
@@ -1144,7 +1170,9 @@ async function applyNewsToGithub() {
   toast('⏳ 正在推送公告到 GitHub...');
   try {
     // 1) 索引：_data/news/index.json
-    await githubWriteFile(gh, '../_data/news/index.json', JSON.stringify({ types: newsTypes, items: newsItems.map(({ html, ...rest }) => rest) }, null, 2));
+    const logoEl = document.getElementById('news-logo-input');
+    if (logoEl) newsLogo = logoEl.value.trim();
+    await githubWriteFile(gh, '../_data/news/index.json', JSON.stringify({ logo: newsLogo, types: newsTypes, items: newsItems.map(({ html, ...rest }) => rest) }, null, 2));
     // 2) 每篇正文：_data/news/<id>.html
     for (const it of newsItems) {
       await githubWriteFile(gh, '../_data/news/' + it.id + '.html', it.html || '<p></p>');
