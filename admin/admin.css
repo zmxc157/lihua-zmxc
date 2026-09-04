@@ -467,8 +467,8 @@ a:hover { color: var(--pink-700); }
 .news-toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .tb-btn { min-width: 32px; height: 30px; border: 1px solid var(--pink-200, #f9c2cd); background: var(--bg-card); color: var(--text-main); border-radius: 8px; cursor: pointer; font-size: 0.8rem; padding: 0 8px; transition: all 0.15s; }
 .tb-btn:hover { background: var(--pink-50, #fff5f6); border-color: var(--pink-400, #f48fa3); }
-.news-html-editor { font-family: Consolas, Monaco, 'Courier New', monospace; font-size: 0.8rem; line-height: 1.6; }
-.news-preview { margin-top: 10px; border: 1px solid var(--pink-200, #f9c2cd); border-radius: 10px; padding: 14px; background: var(--bg-card); max-height: 320px; overflow: auto; }
+.news-html-editor { font-family: Consolas, Monaco, 'Courier New', monospace; font-size: 0.8rem; line-height: 1.6; height: 280px; overflow-y: auto; }
+.news-preview { margin-top: 10px; border: 1px solid var(--pink-200, #f9c2cd); border-radius: 10px; padding: 14px; background: var(--bg-card); max-height: 400px; overflow-y: auto; }
 .news-preview img { max-width: 100%; border-radius: 8px; }
 .news-preview h1, .news-preview h2, .news-preview h3 { margin: 0.6em 0 0.3em; }
 .news-preview p { margin: 0.4em 0; line-height: 1.8; }
