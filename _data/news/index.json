@@ -1,0 +1,24 @@
+{
+  "types": [
+    {
+      "key": "announcement",
+      "label": "📢 公告"
+    },
+    {
+      "key": "activity",
+      "label": "🎁 活动"
+    },
+    {
+      "key": "issue",
+      "label": "⚠️ 异常"
+    }
+  ],
+  "items": [
+    {
+      "id": "nmtn1j1d2b198",
+      "type": "announcement",
+      "title": "测试公告",
+      "date": "2026-09-04"
+    }
+  ]
+}
