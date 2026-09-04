@@ -13,5 +13,12 @@
       "label": "⚠️ 异常"
     }
   ],
-  "items": []
+  "items": [
+    {
+      "id": "nmtn1uaamliv0",
+      "type": "announcement",
+      "title": "关于本站",
+      "date": "2026-09-04"
+    }
+  ]
 }
