@@ -84,7 +84,14 @@
           <div class="news-layout">
             <div class="news-list" id="news-list"></div>
             <div class="news-detail" id="news-detail">
-              <div class="news-detail-empty">👈 选择左侧一条消息查看详情</div>
+              <!-- 手机二级页顶栏：返回公告列表（桌面双栏模式自动隐藏） -->
+              <div class="news-back-bar" id="news-back-bar">
+                <button type="button" class="news-back-btn" id="news-back-btn" aria-label="返回公告列表">‹ 返回列表</button>
+                <span class="news-back-title" id="news-back-title"></span>
+              </div>
+              <div class="news-detail-scroll" id="news-detail-scroll">
+                <div class="news-detail-empty">👈 选择左侧一条消息查看详情</div>
+              </div>
             </div>
           </div>
         </div>
