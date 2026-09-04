@@ -468,6 +468,7 @@ function switchTab(tab) {
   document.getElementById('tab-' + tab)?.classList.add('active');
   document.querySelector(`.nav-btn[data-tab="${tab}"]`)?.classList.add('active');
   if (tab === 'files') loadFileManager();
+  if (tab === 'account') loadNews();
 }
 
 /* ---- 工具函数 ---- */
@@ -920,6 +921,257 @@ async function loadZtFont() {
       document.fonts.add(f);
       return;
     } catch (e) { /* 尝试下一个候选路径 */ }
+  }
+}
+
+/* ===================================================
+   星辰NEWS：公告 / 活动 / 异常 弹窗系统
+   数据：_data/news/index.json（索引+types）+ _data/news/<id>.html（正文）
+   =================================================== */
+
+const NEWS_TYPES = [
+  { key: 'announcement', label: '📢 公告' },
+  { key: 'activity',     label: '🎁 活动' },
+  { key: 'issue',        label: '⚠️ 异常' }
+];
+let newsTypes = NEWS_TYPES.slice(); // 服务端类型，可增减调整
+let newsItems = [];   // { id, type, title, date, html }
+
+async function loadNews() {
+  const box = document.getElementById('news-list');
+  const empty = document.getElementById('news-empty');
+  const count = document.getElementById('news-count');
+  try {
+    // 尝试从线上（GitHub Pages）拉取索引，失败则用本地缓存
+    const idx = await loadJSON('../_data/news/index.json');
+    if (idx.types && idx.types.length) newsTypes = idx.types;
+    newsItems = (idx.items || []).map(it => ({ id: it.id, type: it.type, title: it.title, date: it.date, html: '' }));
+    // 逐条拉取正文（失败时正文留空，编辑时再取）
+    for (const it of newsItems) {
+      try {
+        const r = await fetch('../_data/news/' + it.id + '.html?t=' + Date.now());
+        if (r.ok) it.html = await r.text();
+      } catch(e) {}
+    }
+    localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+  } catch(e) {
+    // 本地缓存回退
+    try {
+      const cached = JSON.parse(localStorage.getItem('zmxc_news_index') || 'null');
+      if (cached) { newsTypes = cached.types || NEWS_TYPES.slice(); newsItems = cached.items || []; }
+    } catch(e2) {}
+  }
+  renderNewsList();
+  renderNewsTypes();
+  if (count) count.textContent = newsItems.length ? '(' + newsItems.length + ')' : '';
+  const msg = document.getElementById('news-msg');
+  if (msg) { msg.textContent = '🔄 已刷新（' + newsItems.length + ' 条）'; msg.style.display = 'inline'; setTimeout(()=>{ msg.style.display='none'; }, 2500); }
+}
+
+function renderNewsList() {
+  const box = document.getElementById('news-list');
+  const empty = document.getElementById('news-empty');
+  const count = document.getElementById('news-count');
+  if (!box) return;
+  if (!newsItems.length) {
+    box.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  if (count) count.textContent = '(' + newsItems.length + ')';
+  const typeLabel = k => (newsTypes.find(t => t.key === k) || { label: k }).label;
+  box.innerHTML = newsItems.map((it, i) => `
+    <div class="news-row">
+      <span class="news-row-type">${escHtml(typeLabel(it.type))}</span>
+      <div class="news-row-info">
+        <div class="news-row-title">${escHtml(it.title)}</div>
+        <div class="news-row-date">${escHtml(it.date || '')} · <code>_data/news/${escHtml(it.id)}.html</code></div>
+      </div>
+      <div class="news-row-actions">
+        <button class="btn-outline btn-sm" onclick="editNews(${i})" title="编辑">✏️</button>
+        <button class="btn-danger btn-sm" onclick="deleteNews(${i})" title="删除">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function openAddNewsModal() {
+  document.getElementById('news-modal-title').textContent = '添加公告';
+  document.getElementById('news-index').value = '';
+  document.getElementById('news-form').reset();
+  document.getElementById('news-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('news-html').value = '';
+  document.getElementById('news-preview').style.display = 'none';
+  document.getElementById('news-modal').style.display = 'flex';
+  fillNewsTypeOptions('');
+}
+
+function editNews(index) {
+  const it = newsItems[index];
+  document.getElementById('news-modal-title').textContent = '编辑公告';
+  document.getElementById('news-index').value = index;
+  document.getElementById('news-type').value = it.type;
+  document.getElementById('news-date').value = it.date || '';
+  document.getElementById('news-title').value = it.title || '';
+  document.getElementById('news-html').value = it.html || '';
+  document.getElementById('news-preview').style.display = 'none';
+  document.getElementById('news-modal').style.display = 'flex';
+  fillNewsTypeOptions(it.type);
+}
+
+function fillNewsTypeOptions(selected) {
+  const sel = document.getElementById('news-type');
+  sel.innerHTML = newsTypes.map(t => `<option value="${escAttr(t.key)}">${escHtml(t.label)}</option>`).join('');
+  if (selected) sel.value = selected;
+}
+
+function closeNewsModal() {
+  document.getElementById('news-modal').style.display = 'none';
+}
+
+async function saveNews(e) {
+  e.preventDefault();
+  const idxField = document.getElementById('news-index').value;
+  const data = {
+    id: idxField ? newsItems[parseInt(idxField)].id : 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    type: document.getElementById('news-type').value,
+    title: document.getElementById('news-title').value.trim(),
+    date: document.getElementById('news-date').value || new Date().toISOString().slice(0, 10),
+    html: document.getElementById('news-html').value
+  };
+  if (!data.title) { alert('请填写标题'); return; }
+  if (idxField) {
+    newsItems[parseInt(idxField)] = { ...newsItems[parseInt(idxField)], ...data };
+  } else {
+    newsItems.push(data);
+  }
+  // 排序：按日期倒序
+  newsItems.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+  closeNewsModal();
+  renderNewsList();
+  toast(idxField ? '✏️ 公告已更新（本地）' : '✅ 公告已添加（本地）');
+}
+
+async function deleteNews(index) {
+  if (!confirm('确认删除该公告？\n（点击推送后线上 _data/news/ 对应 .html 与索引也会被移除）')) return;
+  const it = newsItems[index];
+  newsItems.splice(index, 1);
+  localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+  renderNewsList();
+  toast('🗑️ 已删除（本地）');
+}
+
+/* ---- 类型管理（服务端可增减调整） ---- */
+function addNewsType() {
+  const keyInput = document.getElementById('news-type-key');
+  const labInput = document.getElementById('news-type-label');
+  const key = (keyInput.value.trim() || '').toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const label = labInput.value.trim();
+  if (!key || !label) { alert('请填写类型 key（英文）与显示名'); return; }
+  if (newsTypes.find(t => t.key === key)) { alert('该 key 已存在'); return; }
+  newsTypes.push({ key, label });
+  keyInput.value = ''; labInput.value = '';
+  renderNewsTypes();
+  toast('✅ 已添加类型「' + label + '」');
+}
+
+function removeNewsType(key) {
+  if (!confirm('删除类型「' + key + '」？\n若已有公告使用该类型，将一并改为「公告」。')) return;
+  newsTypes = newsTypes.filter(t => t.key !== key);
+  newsItems.forEach(it => { if (it.type === key) it.type = 'announcement'; });
+  localStorage.setItem('zmxc_news_index', JSON.stringify({ types: newsTypes, items: newsItems }));
+  renderNewsTypes();
+  renderNewsList();
+  toast('🗑️ 类型已删除');
+}
+
+function renderNewsTypes() {
+  const box = document.getElementById('news-type-list');
+  if (!box) return;
+  box.innerHTML = newsTypes.map(t => `
+    <span class="news-type-chip">${escHtml(t.label)}
+      ${newsTypes.length > 1 ? `<button class="chip-x" onclick="removeNewsType('${escAttr(t.key)}')" title="删除类型">✕</button>` : ''}
+    </span>`).join('');
+}
+
+/* ---- HTML 编辑器工具条（蔚蓝档案公告式生成逻辑） ---- */
+function newsWrapTag(tag) {
+  const ta = document.getElementById('news-html');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e) || '文本';
+  ta.value = ta.value.slice(0, s) + '<' + tag + '>' + sel + '</' + tag + '>' + ta.value.slice(e);
+  ta.focus();
+  ta.selectionStart = s + tag.length + 2 + sel.length + tag.length + 3;
+  ta.selectionEnd = ta.selectionStart;
+}
+function newsInsertImg() {
+  const ta = document.getElementById('news-html');
+  const url = prompt('粘贴图片直链 URL（可在「🗂️ 文件管理」复制）：', 'https://');
+  if (!url) return;
+  insertAtCursor(ta, '<img src="' + url + '" alt="" />');
+}
+function newsInsertLink() {
+  const ta = document.getElementById('news-html');
+  const url = prompt('粘贴链接 URL：', 'https://');
+  const text = prompt('链接显示文字：', '点击前往');
+  if (!url) return;
+  insertAtCursor(ta, '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + (text || url) + '</a>');
+}
+function newsInsertLine() {
+  insertAtCursor(document.getElementById('news-html'), '<hr />');
+}
+function insertAtCursor(ta, text) {
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+  ta.focus();
+}
+function newsPreview() {
+  const pv = document.getElementById('news-preview');
+  pv.innerHTML = document.getElementById('news-html').value || '<p style="color:#999">（空内容）</p>';
+  pv.style.display = 'block';
+}
+
+/* ---- 推送全部公告到 GitHub ---- */
+async function applyNewsToGithub() {
+  const gh = config.github;
+  if (!gh || !gh.tokenEncrypted) { toast('❌ 未配置 GitHub，请先到「🚀 部署设置」', true); switchTab('deploy'); return; }
+  try {
+    await getGithubToken();
+  } catch(e) {
+    toast('❌ ' + e.message, true); switchTab('deploy'); return;
+  }
+  toast('⏳ 正在推送公告到 GitHub...');
+  try {
+    // 1) 索引：_data/news/index.json
+    await githubWriteFile(gh, '../_data/news/index.json', JSON.stringify({ types: newsTypes, items: newsItems.map(({ html, ...rest }) => rest) }, null, 2));
+    // 2) 每篇正文：_data/news/<id>.html
+    for (const it of newsItems) {
+      await githubWriteFile(gh, '../_data/news/' + it.id + '.html', it.html || '<p></p>');
+    }
+    toast('✅ 公告已推送（索引 + ' + newsItems.length + ' 篇 HTML）');
+    const msg = document.getElementById('news-msg');
+    if (msg) { msg.textContent = '✅ 已推送至 GitHub（' + newsItems.length + ' 条）'; msg.style.display = 'inline'; setTimeout(()=>{ msg.style.display='none'; }, 4000); }
+  } catch(e) {
+    toast('❌ 推送失败：' + e.message, true);
+  }
+}
+
+/* ---- 问卷：立即推送至 GitHub ---- */
+async function applyQuestionnaireToGithub() {
+  const gh = config.github;
+  if (!gh || !gh.tokenEncrypted) { toast('❌ 未配置 GitHub，请先到「🚀 部署设置」', true); switchTab('deploy'); return; }
+  try {
+    await getGithubToken();
+  } catch(e) {
+    toast('❌ ' + e.message, true); switchTab('deploy'); return;
+  }
+  toast('⏳ 正在推送问卷配置...');
+  try {
+    const res = await saveConfig(); // config.json 内含 questionnaires
+    toast('✅ 问卷配置已同步到 GitHub（config.json）');
+  } catch(e) {
+    toast('❌ 推送失败：' + e.message, true);
   }
 }
 
