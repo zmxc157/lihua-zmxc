@@ -847,7 +847,7 @@ body::before {
 .news-article-body th, .news-article-body td { border: 1px solid var(--pink-200); padding: 6px 10px; font-size: 0.82rem; }
 .news-article-body th { background: var(--pink-50); color: var(--pink-600); }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .news-card { width: 96vw; max-height: 88vh; }
   .news-body-area { padding: 12px 12px 14px; }
   .news-head { padding: 14px 16px; }
@@ -865,8 +865,9 @@ body::before {
   .news-back-btn:active { transform: scale(0.94); background: var(--pink-50); }
   .news-back-title { flex: 1; min-width: 0; font-size: 0.8rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
   .news-detail-scroll { padding: 14px; }
-  /* —— 手机端二级页正文区：news-detail 由 flex 分配高度，内部 overflow-y 滚动 —— */
-  .news-detail { flex: 1; height: auto; overflow: hidden; }
+  /* —— 手机端二级页正文区：height:100% 让父容器显式约束，scroll 才有基准可溢出 —— */
+  .news-layout { height: 100%; }
+  #news-modal.news-level-detail .news-detail { display: flex; height: 100%; overflow: hidden; }
   .news-detail-scroll { flex: 1; min-height: 0; overflow-y: auto; }
   .news-back-bar { flex-shrink: 0; }
 }
