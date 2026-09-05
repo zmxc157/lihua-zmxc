@@ -865,9 +865,9 @@ body::before {
   .news-back-btn:active { transform: scale(0.94); background: var(--pink-50); }
   .news-back-title { flex: 1; min-width: 0; font-size: 0.8rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
   .news-detail-scroll { padding: 14px; }
-  /* —— 手机端二级页正文区：height:100% 让父容器显式约束，scroll 才有基准可溢出 —— */
+  /* —— 手机端二级页正文区：用 vh 视口高度（永远确定，不依赖父级 flex 高度链）—— */
   .news-layout { height: 100%; }
-  #news-modal.news-level-detail .news-detail { display: flex; height: 100%; overflow: visible; }
+  #news-modal.news-level-detail .news-detail { display: flex; height: 75vh; overflow: visible; }
   .news-detail-scroll { flex: 1; min-height: 0; overflow-y: scroll; }
   .news-back-bar { flex-shrink: 0; }
 }
