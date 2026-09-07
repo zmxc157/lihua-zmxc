@@ -999,7 +999,7 @@ function renderNewsList() {
       <span class="news-row-type">${escHtml(typeLabel(it.type))}</span>
       <div class="news-row-info">
         <div class="news-row-title">${escHtml(it.title)}</div>
-        <div class="news-row-date">${escHtml(it.date || '')} · <code>_data/news/${escHtml(it.id)}.html</code></div>
+        <div class="news-row-date">${escHtml(it.date || '')} · <code>https://zmxc157.github.io/lihua-zmxc/_data/news/${escHtml(it.id)}.html</code></div>
       </div>
       <div class="news-row-actions">
         <button class="btn-outline btn-sm" onclick="editNews(${i})" title="编辑">✏️</button>
