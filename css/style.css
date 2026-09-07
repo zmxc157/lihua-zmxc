@@ -512,6 +512,7 @@ a:hover { color: var(--pink-700); }
   font-size: 0.9rem; color: var(--text-sub);
   line-height: 1.8; margin-bottom: 20px;
   white-space: pre-wrap; word-break: break-word;
+  max-height: 260px; overflow-y: scroll;
 }
 
 /* === 内嵌问卷卡片 === */
@@ -843,7 +844,7 @@ body::before {
 .news-detail-empty { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 200px; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
 .news-detail-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 200px; color: var(--pink-600); font-size: 0.8rem; }
 .news-article-meta { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.5px; }
-.news-article-title { font-family: var(--font-jp); font-size: 1.15rem; font-weight: 800; color: var(--pink-600); margin: 6px 0 12px; line-height: 1.4; }
+.news-article-title { font-family: var(--font-jp); font-size: 1.15rem; font-weight: 800; color: var(--pink-600); margin: 6px 0 12px; line-height: 1.4; max-height: 80px; overflow-y: scroll; }
 .news-article-body { color: var(--text-main); font-size: 0.88rem; line-height: 1.9; }
 .news-article-body img { max-width: 100%; border-radius: 10px; margin: 8px 0; }
 .news-article-body h1, .news-article-body h2, .news-article-body h3 { color: var(--pink-600); margin: 1em 0 0.4em; line-height: 1.4; }
