@@ -511,7 +511,17 @@ a:hover { color: var(--pink-700); }
 .modal-body {
   font-size: 0.9rem; color: var(--text-sub);
   line-height: 1.8; margin-bottom: 20px;
+  white-space: pre-wrap; word-break: break-word;
 }
+
+/* === 内嵌问卷卡片 === */
+.inline-q-card { display: flex; align-items: center; gap: 12px; background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 16px; margin: 10px 0; cursor: pointer; transition: var(--transition); }
+.inline-q-card:hover { border-color: var(--pink-300); box-shadow: var(--shadow-sm); }
+.inline-q-ico { font-size: 1.4rem; flex-shrink: 0; }
+.inline-q-info { flex: 1; min-width: 0; }
+.inline-q-title { font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.inline-q-desc { font-size: 0.82rem; color: var(--text-sub); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.inline-q-btn { flex-shrink: 0; padding: 6px 14px; font-size: 0.8rem; }
 
 /* 问卷浮动按钮 */
 .questionnaire-fab {
