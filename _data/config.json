@@ -11,7 +11,16 @@
     "未分类",
     "弹唱"
   ],
-  "questionnaires": [],
+  "questionnaires": [
+    {
+      "id": "q-1788756233667",
+      "title": "切片收录！",
+      "url": "https://v.wjx.cn/vm/Q0a0tYr.aspx#",
+      "description": "栗子厨您好，感谢您对本站的支持。\n\n为更好地服务社区，我们上线了一份投稿问卷，面向以下两类用户：\n\n1、普通栗子厨 — 提交切片请求，我们将评估并酌情处理发布。\n\n2、切片man — 提交您已制作的切片作品，经审核后将上架至本站。\n\n感谢您的参与。\n今后也请您多多支持「逐梦星辰」。",
+      "position": "list-top",
+      "showFab": false
+    }
+  ],
   "github": {
     "owner": "zmxc157",
     "repo": "lihua-zmxc",
