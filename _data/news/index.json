@@ -12,6 +12,10 @@
     {
       "key": "issue",
       "label": "⚠️ 异常"
+    },
+    {
+      "key": "advertisement",
+      "label": "📣广告"
     }
   ],
   "items": [
