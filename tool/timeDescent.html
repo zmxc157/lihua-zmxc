@@ -488,19 +488,19 @@
     <div class="field full">
       <label class="label">回放起始时间 <span class="tag">年月日 + 时分秒</span></label>
       <div class="time-row">
-        <input id="startDate" class="input date-input" type="date" value="2026-09-14" />
+        <input id="startDate" class="input date-input" type="date" />
         <div class="time-group">
           <input id="startH" class="input time-input" type="text" inputmode="numeric"
-                 maxlength="2" placeholder="22" data-max="23" value="22" aria-label="起始小时" />
+                 maxlength="2" placeholder="00" data-max="23" value="22" aria-label="起始小时" />
           <span class="tsep">:</span>
           <input id="startM" class="input time-input" type="text" inputmode="numeric"
                  maxlength="2" placeholder="00" data-max="59" value="00" aria-label="起始分钟" />
           <span class="tsep">:</span>
           <input id="startS" class="input time-input" type="text" inputmode="numeric"
-                 maxlength="2" placeholder="03" data-max="59" value="03" aria-label="起始秒" />
+                 maxlength="2" placeholder="00" data-max="59" value="00" aria-label="起始秒" />
         </div>
       </div>
-      <div class="helper">时 / 分 / 秒 分段输入，满两位自动跳格，支持 ↑ ↓ 微调；毫秒精度自动忽略</div>
+      <div class="helper">日期默认读取当前时钟；时 / 分 / 秒 分段输入，满两位自动跳格，支持 ↑ ↓ 微调</div>
     </div>
 
     <!-- 记录时间 -->
@@ -508,10 +508,10 @@
       <label class="label">记录时间 <span class="tag">精确到分钟</span></label>
       <div class="time-group">
         <input id="recH" class="input time-input" type="text" inputmode="numeric"
-               maxlength="2" placeholder="23" data-max="23" aria-label="记录小时" />
+               maxlength="2" placeholder="00" data-max="23" aria-label="记录小时" />
         <span class="tsep">:</span>
         <input id="recM" class="input time-input" type="text" inputmode="numeric"
-               maxlength="2" placeholder="37" data-max="59" aria-label="记录分钟" />
+               maxlength="2" placeholder="00" data-max="59" aria-label="记录分钟" />
       </div>
       <div class="helper">只需时分；若早于起始时刻，将自动按次日推算</div>
     </div>
@@ -521,15 +521,15 @@
       <label class="label">回放总时长 <span class="tag">时 : 分 : 秒</span></label>
       <div class="time-group">
         <input id="durH" class="input time-input" type="text" inputmode="numeric"
-               maxlength="2" placeholder="00" data-max="99" aria-label="总时长小时" />
+               maxlength="2" placeholder="00" data-max="99" value="02" aria-label="总时长小时" />
         <span class="tsep">:</span>
         <input id="durM" class="input time-input" type="text" inputmode="numeric"
-               maxlength="2" placeholder="00" data-max="59" aria-label="总时长分钟" />
+               maxlength="2" placeholder="00" data-max="59" value="00" aria-label="总时长分钟" />
         <span class="tsep">:</span>
         <input id="durS" class="input time-input" type="text" inputmode="numeric"
-               maxlength="2" placeholder="00" data-max="59" aria-label="总时长秒" />
+               maxlength="2" placeholder="00" data-max="59" value="00" aria-label="总时长秒" />
       </div>
-      <div class="helper">全部留空则不进行越界校验</div>
+      <div class="helper">默认 2 小时整；全部留空则不进行越界校验</div>
     </div>
 
   </div>
@@ -685,6 +685,12 @@
   }
   function pad2(n) { return String(n).padStart(2, "0"); }
 
+  /** 当前本地日期，格式 YYYY-MM-DD */
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
   /** 毫秒 -> HH:MM:SS（向下取整，绝不空降过头） */
   function fmtHMS(ms) {
     var total = Math.floor(Math.max(0, ms) / 1000);
@@ -704,6 +710,21 @@
     if (v === "") return def;
     var n = parseInt(v, 10);
     return isNaN(n) ? def : n;
+  }
+
+  /* ================= 应用默认值 ================= */
+  function applyDefaults(){
+    startDateEl.value = todayStr();   // 默认读取当前时钟日期
+    startHEl.value = "22";
+    startMEl.value = "00";
+    startSEl.value = "00";
+
+    recHEl.value = "";                // 记录时间默认留空
+    recMEl.value = "";
+
+    durHEl.value = "02";              // 总时长默认 2 小时整
+    durMEl.value = "00";
+    durSEl.value = "00";
   }
 
   /* ================= 时分秒输入框行为 ================= */
@@ -975,15 +996,7 @@
   calcBtn.addEventListener("click", compute);
 
   resetBtn.addEventListener("click", function () {
-    startDateEl.value = "2026-09-14";
-    startHEl.value = "22";
-    startMEl.value = "00";
-    startSEl.value = "03";
-    recHEl.value = "";
-    recMEl.value = "";
-    durHEl.value = "";
-    durMEl.value = "";
-    durSEl.value = "";
+    applyDefaults();
     resultEl.innerHTML = "";
     recHEl.focus();
   });
@@ -991,6 +1004,9 @@
   startDateEl.addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); compute(); }
   });
+
+  /* ================= 初始化 ================= */
+  applyDefaults();
 
   /* 兜底：若 js/app.js 未提供 initSite，也不报错 */
   if (typeof window.initSite !== "function") {
@@ -1005,4 +1021,4 @@
   document.addEventListener('DOMContentLoaded', () => initSite());
 </script>
 </body>
-</html>
+  </html>
