@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>回放空降辅助网页（时钟版）</title>
+<style>
+  /* ===== 全局字体 ===== */
+  @font-face{
+    font-family:'ZT';
+    src:url('zt.ttf') format('truetype');
+    font-weight:100 900;
+    font-style:normal;
+    font-display:swap;
+  }
+
+  :root{
+    --font:'ZT', -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --mono:'ZT', ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Courier New", monospace;
+
+    --bg-top:#ffe9f2;
+    --bg-mid:#ffdce9;
+    --bg-bot:#fff7fb;
+
+    --card-bg:rgba(255,255,255,.78);
+    --card-border:rgba(255,150,190,.32);
+
+    --text:#5d3a4b;
+    --text-soft:#8a6274;
+    --muted:#b08a9d;
+
+    --accent:#ff7eb3;
+    --accent-deep:#ff5c96;
+
+    --field-bg:rgba(255,255,255,.86);
+    --field-border:rgba(255,150,190,.38);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 600px at 8% 0%, #fff0f6 0%, transparent 62%),
+      radial-gradient(800px 620px at 96% 100%, #ffe4f0 0%, transparent 62%),
+      linear-gradient(170deg, var(--bg-top) 0%, var(--bg-mid) 48%, var(--bg-bot) 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:var(--font);
+    font-weight:400;
+    letter-spacing:.02em;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+    padding:40px 20px 0;
+    position:relative;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* ===== 樱花画布 ===== */
+  #sakura{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ===== 卡片 ===== */
+  .card{
+    position:relative;
+    z-index:1;
+    width:min(900px,100%);
+    margin:auto;
+    background:var(--card-bg);
+    border:1.5px solid var(--card-border);
+    border-radius:30px;
+    padding:34px;
+    backdrop-filter:blur(26px) saturate(150%);
+    -webkit-backdrop-filter:blur(26px) saturate(150%);
+    box-shadow:
+      0 34px 80px -34px rgba(255,110,165,.55),
+      0 6px 22px -12px rgba(255,140,185,.35),
+      inset 0 1px 0 rgba(255,255,255,.95);
+    animation:cardIn .6s cubic-bezier(.2,.85,.3,1);
+  }
+  @keyframes cardIn{
+    from{opacity:0;transform:translateY(20px) scale(.98);}
+    to{opacity:1;transform:none;}
+  }
+
+  /* 卡片顶部小樱花点缀 */
+  .card::after{
+    content:"";
+    position:absolute;
+    top:-13px; right:38px;
+    width:26px; height:26px;
+    background:
+      radial-gradient(circle at 50% 18%, #ffb3cf 0 34%, transparent 35%),
+      radial-gradient(circle at 82% 42%, #ffc2d9 0 34%, transparent 35%),
+      radial-gradient(circle at 68% 84%, #ffb3cf 0 34%, transparent 35%),
+      radial-gradient(circle at 32% 84%, #ffc2d9 0 34%, transparent 35%),
+      radial-gradient(circle at 18% 42%, #ffb3cf 0 34%, transparent 35%);
+    filter:drop-shadow(0 4px 10px rgba(255,120,175,.5));
+    animation:sway 5s ease-in-out infinite;
+  }
+  @keyframes sway{
+    0%,100%{transform:rotate(-8deg) translateY(0);}
+    50%    {transform:rotate(8deg) translateY(-4px);}
+  }
+
+  /* ===== 头部 ===== */
+  .head{display:flex;align-items:center;gap:16px;margin-bottom:30px;}
+
+  .badge{
+    width:58px;height:58px;flex:0 0 58px;
+    border-radius:20px;
+    display:grid;place-items:center;
+    color:#fff;
+    background:linear-gradient(145deg,#ffa8ca,#ff7eb3 55%,#ff9dc4);
+    border:1.5px solid rgba(255,255,255,.9);
+    animation:glowPulse 3.6s ease-in-out infinite;
+  }
+  @keyframes glowPulse{
+    0%,100%{box-shadow:0 10px 24px -10px rgba(255,110,165,.75), inset 0 1px 0 rgba(255,255,255,.6);}
+    50%    {box-shadow:0 14px 34px -8px rgba(255,110,165,1), inset 0 1px 0 rgba(255,255,255,.6);}
+  }
+
+  h1{
+    margin:0;
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:.04em;
+    background:linear-gradient(100deg,#ff4d8d 0%,#ff7eb3 48%,#ff9fc9 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .sub{margin:6px 0 0;font-size:13px;color:var(--muted);letter-spacing:.04em;}
+
+  /* ===== 表单 ===== */
+  .form{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px 20px;
+  }
+  .field.full{grid-column:1 / -1;}
+
+  .label{
+    display:flex;align-items:center;gap:9px;
+    font-size:13px;font-weight:700;color:var(--text-soft);
+    margin-bottom:10px;letter-spacing:.05em;
+  }
+  .tag{
+    font-size:11px;font-weight:400;color:#e26a9c;
+    background:rgba(255,126,179,.14);
+    border:1px solid rgba(255,126,179,.28);
+    padding:2px 9px;border-radius:999px;
+    letter-spacing:.03em;
+  }
+
+  .input{
+    background:var(--field-bg);
+    border:1.5px solid var(--field-border);
+    border-radius:15px;
+    color:var(--text);
+    font-family:var(--font);
+    font-weight:400;
+    outline:none;
+    transition:border-color .18s, box-shadow .18s, background .18s;
+  }
+  .input::placeholder{color:#e3b8ca;}
+  .input:hover{border-color:rgba(255,126,179,.6);}
+  .input:focus{
+    border-color:var(--accent);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(255,126,179,.16), 0 6px 20px -8px rgba(255,110,165,.6);
+  }
+
+  /* --- 时间行 --- */
+  .time-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+
+  .date-input{
+    flex:0 0 auto;
+    width:196px;
+    padding:13px 14px;
+    font-size:14px;
+    letter-spacing:.03em;
+    color-scheme:light;
+  }
+
+  .time-group{display:flex;align-items:center;gap:8px;}
+
+  .time-input{
+    width:70px;
+    padding:13px 4px;
+    text-align:center;
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:.04em;
+    font-variant-numeric:tabular-nums;
+    caret-color:var(--accent-deep);
+  }
+  .time-input::placeholder{font-weight:400;color:#e8c4d4;}
+
+  .tsep{
+    color:#ffa6c8;
+    font-size:18px;
+    font-weight:700;
+    user-select:none;
+    margin:0 -2px;
+  }
+
+  .helper{margin-top:9px;font-size:11.5px;color:var(--muted);line-height:1.7;letter-spacing:.03em;}
+
+  /* ===== 按钮 ===== */
+  .actions{display:flex;gap:12px;margin-top:30px;}
+
+  .btn{
+    border:none;cursor:pointer;font-family:var(--font);
+    font-size:14px;font-weight:700;
+    letter-spacing:.06em;
+    border-radius:16px;padding:16px 22px;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .15s, box-shadow .22s, background .22s, color .22s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:translateY(1px) scale(.995);}
+
+  .btn.primary{
+    flex:1;
+    color:#fff;
+    background:linear-gradient(120deg,#ff8fbd,#ff6ba6 52%,#ff5c96);
+    box-shadow:0 16px 34px -14px rgba(255,92,150,.95), inset 0 1px 0 rgba(255,255,255,.45);
+  }
+  .btn.primary:hover{
+    box-shadow:0 20px 44px -14px rgba(255,92,150,1), inset 0 1px 0 rgba(255,255,255,.45);
+  }
+
+  .btn.ghost{
+    color:#e2689b;
+    background:rgba(255,255,255,.72);
+    border:1.5px solid rgba(255,150,190,.42);
+  }
+  .btn.ghost:hover{background:#fff;color:var(--accent-deep);}
+
+  /* ===== 结果区 ===== */
+  .result{margin-top:26px;}
+
+  .res-card{
+    border-radius:22px;
+    padding:26px;
+    background:
+      linear-gradient(160deg, rgba(255,255,255,.95), rgba(255,236,244,.86) 55%, rgba(255,247,251,.92));
+    border:1.5px solid rgba(255,140,185,.38);
+    box-shadow:
+      inset 0 1px 0 #fff,
+      0 22px 50px -30px rgba(255,110,165,.85);
+    animation:rise .4s cubic-bezier(.2,.85,.3,1);
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(12px);}
+    to{opacity:1;transform:none;}
+  }
+
+  .res-head{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+  }
+
+  .res-label{
+    font-size:11.5px;letter-spacing:.2em;
+    color:#d178a3;font-weight:700;
+  }
+
+  .big{
+    font-family:var(--font);
+    font-size:clamp(42px,9vw,70px);
+    font-weight:700;
+    line-height:1.05;
+    letter-spacing:.04em;
+    font-variant-numeric:tabular-nums;
+    margin-top:8px;
+    background:linear-gradient(180deg,#ff3d84,#ff7eb3 62%,#ffa8cd);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    filter:drop-shadow(0 8px 22px rgba(255,110,165,.4));
+  }
+
+  .copy{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:11px 16px;border-radius:13px;
+    font-size:12.5px;font-weight:700;font-family:var(--font);
+    letter-spacing:.06em;
+    color:#e2558f;
+    background:rgba(255,255,255,.9);
+    border:1.5px solid rgba(255,140,185,.45);
+    cursor:pointer;white-space:nowrap;
+    transition:all .18s;
+    box-shadow:0 6px 16px -10px rgba(255,110,165,.8);
+  }
+  .copy:hover{background:#fff;border-color:var(--accent);color:var(--accent-deep);}
+  .copy.done{color:#2fae7a;border-color:rgba(47,174,122,.5);background:rgba(230,255,244,.95);}
+
+  .meta{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+    gap:16px;
+    margin-top:22px;
+    padding-top:20px;
+    border-top:1.5px dashed rgba(255,150,190,.4);
+  }
+  .meta > div{display:flex;flex-direction:column;gap:6px;min-width:0;}
+  .meta span{font-size:11.5px;color:#c07e9e;letter-spacing:.06em;}
+  .meta strong{
+    font-size:13.5px;font-weight:700;
+    color:#7a4d63;word-break:break-all;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.04em;
+  }
+  .meta em{
+    font-style:normal;font-size:10.5px;font-weight:700;
+    color:#fff;background:linear-gradient(120deg,#ff8fbd,#ff6ba6);
+    border-radius:6px;padding:1.5px 7px;margin-left:6px;
+    vertical-align:1.5px;
+    box-shadow:0 3px 8px -3px rgba(255,110,165,.9);
+  }
+
+  .bar{
+    margin-top:20px;height:9px;border-radius:999px;
+    background:rgba(255,150,190,.22);
+    overflow:hidden;position:relative;
+  }
+  .bar i{
+    display:block;height:100%;border-radius:999px;
+    background:linear-gradient(90deg,#ffa8ca,#ff6ba6 60%,#ff4d8d);
+    box-shadow:0 0 16px rgba(255,110,165,.85);
+    transition:width .6s cubic-bezier(.2,.85,.3,1);
+  }
+  .bar-note{
+    display:flex;justify-content:space-between;
+    margin-top:9px;font-size:11px;color:#c58ba8;
+    font-variant-numeric:tabular-nums;letter-spacing:.04em;
+  }
+
+  .note{
+    margin-top:16px;font-size:12px;color:#b8809c;
+    display:flex;align-items:center;gap:7px;letter-spacing:.04em;
+  }
+  .note::before{
+    content:"";width:7px;height:7px;
+    background:linear-gradient(145deg,#ffb3cf,#ff7eb3);
+    border-radius:50% 0 50% 50%;
+    transform:rotate(-45deg);
+    box-shadow:0 0 8px rgba(255,126,179,.9);
+    flex:0 0 7px;
+  }
+
+  /* 错误提示 */
+  .alert{
+    display:flex;gap:15px;align-items:flex-start;
+    border-radius:20px;padding:22px 24px;
+    animation:rise .34s cubic-bezier(.2,.85,.3,1);
+  }
+  .alert.err{
+    background:linear-gradient(160deg, rgba(255,235,241,.95), rgba(255,246,249,.9));
+    border:1.5px solid rgba(255,120,155,.45);
+    box-shadow:0 22px 50px -34px rgba(255,110,150,.9);
+  }
+  .alert .ico{
+    width:42px;height:42px;flex:0 0 42px;border-radius:14px;
+    display:grid;place-items:center;
+    background:linear-gradient(145deg,#ffb0c4,#ff7d9d);
+    color:#fff;
+    box-shadow:0 8px 18px -8px rgba(255,110,150,.9);
+  }
+  .alert h3{margin:0 0 6px;font-size:15px;font-weight:700;color:#d94a72;letter-spacing:.05em;}
+  .alert p{margin:0;font-size:12.5px;line-height:1.75;color:#9c7083;letter-spacing:.03em;}
+
+  /* ===== 底部页脚 ===== */
+  .site-footer{
+    position:relative;
+    z-index:1;
+    width:min(900px,100%);
+    margin:30px auto 0;
+    padding-bottom:34px;
+  }
+  .footer-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    padding:18px 26px;
+    border-radius:20px;
+    background:rgba(255,255,255,.62);
+    border:1.5px solid rgba(255,150,190,.30);
+    backdrop-filter:blur(20px) saturate(150%);
+    -webkit-backdrop-filter:blur(20px) saturate(150%);
+    box-shadow:
+      0 18px 40px -26px rgba(255,110,165,.8),
+      inset 0 1px 0 rgba(255,255,255,.9);
+    font-size:12.5px;
+    color:#b8809c;
+    letter-spacing:.04em;
+  }
+  .footer-brand{
+    font-weight:700;
+    color:#e2558f;
+    letter-spacing:.08em;
+  }
+  .footer-links{display:flex;gap:16px;align-items:center;}
+  .footer-link{
+    color:#e2689b;
+    text-decoration:none;
+    font-weight:700;
+    letter-spacing:.04em;
+    transition:color .18s, text-shadow .18s;
+  }
+  .footer-link:hover{
+    color:#ff4d8d;
+    text-shadow:0 0 12px rgba(255,110,165,.7);
+  }
+  .footer-copy{
+    color:#c58ba8;
+    font-weight:400;
+    letter-spacing:.04em;
+  }
+
+  /* ===== 响应式 ===== */
+  @media (max-width:760px){
+    body{padding:26px 14px 0;}
+    .card{padding:24px;border-radius:24px;}
+    .form{grid-template-columns:1fr;}
+    .field.full{grid-column:auto;}
+    .head{gap:13px;margin-bottom:24px;}
+    .badge{width:50px;height:50px;flex:0 0 50px;border-radius:17px;}
+    h1{font-size:19px;}
+    .sub{font-size:12px;}
+    .actions{flex-direction:column-reverse;}
+    .btn{padding:15px 20px;}
+    .res-card{padding:20px;}
+    .time-row{gap:10px;}
+    .date-input{width:100%;}
+    .time-input{width:60px;font-size:15px;}
+    .card::after{right:22px;}
+    .site-footer{margin-top:22px;padding-bottom:26px;}
+    .footer-inner{
+      flex-direction:column;
+      text-align:center;
+      gap:11px;
+      padding:16px 18px;
+      font-size:12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="sakura" aria-hidden="true"></canvas>
+
+<main class="card">
+  <header class="head">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
+           stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 6.8V12l3.5 2.1"></path>
+      </svg>
+    </div>
+    <div>
+      <h1>回放空降辅助网页</h1>
+      <p class="sub">时钟版 · 输入回放起点与记录时间，自动换算空降位置</p>
+    </div>
+  </header>
+
+  <div class="form">
+
+    <!-- 回放起始时间 -->
+    <div class="field full">
+      <label class="label">回放起始时间 <span class="tag">年月日 + 时分秒</span></label>
+      <div class="time-row">
+        <input id="startDate" class="input date-input" type="date" value="2026-09-14" />
+        <div class="time-group">
+          <input id="startH" class="input time-input" type="text" inputmode="numeric"
+                 maxlength="2" placeholder="22" data-max="23" value="22" aria-label="起始小时" />
+          <span class="tsep">:</span>
+          <input id="startM" class="input time-input" type="text" inputmode="numeric"
+                 maxlength="2" placeholder="00" data-max="59" value="00" aria-label="起始分钟" />
+          <span class="tsep">:</span>
+          <input id="startS" class="input time-input" type="text" inputmode="numeric"
+                 maxlength="2" placeholder="03" data-max="59" value="03" aria-label="起始秒" />
+        </div>
+      </div>
+      <div class="helper">时 / 分 / 秒 分段输入，满两位自动跳格，支持 ↑ ↓ 微调；毫秒精度自动忽略</div>
+    </div>
+
+    <!-- 记录时间 -->
+    <div class="field">
+      <label class="label">记录时间 <span class="tag">精确到分钟</span></label>
+      <div class="time-group">
+        <input id="recH" class="input time-input" type="text" inputmode="numeric"
+               maxlength="2" placeholder="23" data-max="23" aria-label="记录小时" />
+        <span class="tsep">:</span>
+        <input id="recM" class="input time-input" type="text" inputmode="numeric"
+               maxlength="2" placeholder="37" data-max="59" aria-label="记录分钟" />
+      </div>
+      <div class="helper">只需时分；若早于起始时刻，将自动按次日推算</div>
+    </div>
+
+    <!-- 回放总时长 -->
+    <div class="field">
+      <label class="label">回放总时长 <span class="tag">时 : 分 : 秒</span></label>
+      <div class="time-group">
+        <input id="durH" class="input time-input" type="text" inputmode="numeric"
+               maxlength="2" placeholder="00" data-max="99" aria-label="总时长小时" />
+        <span class="tsep">:</span>
+        <input id="durM" class="input time-input" type="text" inputmode="numeric"
+               maxlength="2" placeholder="00" data-max="59" aria-label="总时长分钟" />
+        <span class="tsep">:</span>
+        <input id="durS" class="input time-input" type="text" inputmode="numeric"
+               maxlength="2" placeholder="00" data-max="59" aria-label="总时长秒" />
+      </div>
+      <div class="helper">全部留空则不进行越界校验</div>
+    </div>
+
+  </div>
+
+  <div class="actions">
+    <button id="calcBtn" class="btn primary" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v18M3 12h18"></path>
+      </svg>
+      计算空降位置
+    </button>
+    <button id="resetBtn" class="btn ghost" type="button">重置</button>
+  </div>
+
+  <div id="result" class="result"></div>
+</main>
+
+<!-- 底部 -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">🌸 ZMXC</div>
+    <div class="footer-links">
+      <a href="mailto:1578929129@qq.com" class="footer-link">📧 侵权投诉</a>
+    </div>
+    <div class="footer-copy">©️ ZMXC · 星辰桑切片收录站</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= 樱花飘落 ================= */
+  (function sakura(){
+    var canvas = document.getElementById("sakura");
+    if(!canvas || !canvas.getContext) return;
+    var ctx = canvas.getContext("2d");
+
+    var COLORS = ["#ffc2d6","#ffb0c9","#ffd3e2","#ff9dbf","#ffdceb","#ffaacb"];
+    var W = 0, H = 0, dpr = 1;
+    var petals = [];
+    var reduce = window.matchMedia &&
+                 window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function resize(){
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width  = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+      canvas.style.width  = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function makePetal(fromTop){
+      return {
+        x: Math.random() * W,
+        y: fromTop ? -40 - Math.random() * H * 0.4 : Math.random() * H,
+        size: 7 + Math.random() * 13,
+        speed: 0.32 + Math.random() * 0.85,
+        drift: (Math.random() - 0.5) * 0.5,
+        angle: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 0.022,
+        swing: Math.random() * Math.PI * 2,
+        swingSpeed: 0.008 + Math.random() * 0.02,
+        alpha: 0.42 + Math.random() * 0.48,
+        color: COLORS[(Math.random() * COLORS.length) | 0]
+      };
+    }
+
+    function init(){
+      petals = [];
+      var count = Math.max(18, Math.min(46, Math.round(W / 28)));
+      for (var i = 0; i < count; i++) petals.push(makePetal(false));
+    }
+
+    function drawPetal(p){
+      var s = p.size;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.moveTo(0, s * 0.55);
+      ctx.bezierCurveTo(s * 0.48, s * 0.26, s * 0.46, -s * 0.36, 0, -s * 0.56);
+      ctx.bezierCurveTo(-s * 0.46, -s * 0.36, -s * 0.48, s * 0.26, 0, s * 0.55);
+      ctx.fill();
+      ctx.globalAlpha = p.alpha * 0.5;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = Math.max(0.5, s * 0.055);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function frame(){
+      ctx.clearRect(0, 0, W, H);
+
+      for (var i = 0; i < petals.length; i++){
+        var p = petals[i];
+        p.swing += p.swingSpeed;
+        p.y += p.speed;
+        p.x += Math.sin(p.swing) * 0.75 + p.drift;
+        p.angle += p.spin;
+
+        if (p.y - p.size > H + 40){
+          petals[i] = makePetal(true);
+          continue;
+        }
+        if (p.x < -80) p.x = W + 60;
+        else if (p.x > W + 80) p.x = -60;
+
+        drawPetal(p);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    resize();
+    init();
+    window.addEventListener("resize", function(){
+      resize();
+      init();
+    });
+
+    if (reduce){
+      for (var k = 0; k < petals.length; k++) drawPetal(petals[k]);
+    } else {
+      requestAnimationFrame(frame);
+    }
+  })();
+
+  /* ================= DOM ================= */
+  var startDateEl = document.getElementById("startDate");
+  var startHEl = document.getElementById("startH");
+  var startMEl = document.getElementById("startM");
+  var startSEl = document.getElementById("startS");
+  var recHEl   = document.getElementById("recH");
+  var recMEl   = document.getElementById("recM");
+  var durHEl   = document.getElementById("durH");
+  var durMEl   = document.getElementById("durM");
+  var durSEl   = document.getElementById("durS");
+  var resultEl = document.getElementById("result");
+  var calcBtn  = document.getElementById("calcBtn");
+  var resetBtn = document.getElementById("resetBtn");
+
+  /* ================= 工具 ================= */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function pad2(n) { return String(n).padStart(2, "0"); }
+
+  /** 毫秒 -> HH:MM:SS（向下取整，绝不空降过头） */
+  function fmtHMS(ms) {
+    var total = Math.floor(Math.max(0, ms) / 1000);
+    var h = Math.floor(total / 3600);
+    var m = Math.floor((total % 3600) / 60);
+    var s = total % 60;
+    return pad2(h) + ":" + pad2(m) + ":" + pad2(s);
+  }
+
+  function fmtParts(p) {
+    return p.y + "-" + pad2(p.mo) + "-" + pad2(p.d) + " " +
+           pad2(p.h) + ":" + pad2(p.mi) + ":" + pad2(p.s);
+  }
+
+  function readInt(el, def) {
+    var v = String(el.value || "").trim();
+    if (v === "") return def;
+    var n = parseInt(v, 10);
+    return isNaN(n) ? def : n;
+  }
+
+  /* ================= 时分秒输入框行为 ================= */
+  function bindTimeInputs(inputs) {
+    inputs.forEach(function (el, i) {
+      el.addEventListener("input", function () {
+        var v = el.value.replace(/\D/g, "").slice(0, 2);
+        el.value = v;
+        if (v.length >= 2) {
+          for (var j = i + 1; j < inputs.length; j++) {
+            if (inputs[j] && !inputs[j].disabled) {
+              inputs[j].focus();
+              inputs[j].select();
+              break;
+            }
+          }
+        }
+      });
+
+      el.addEventListener("blur", function () {
+        if (el.value === "") return;
+        var max = parseInt(el.dataset.max || "59", 10);
+        var n = parseInt(el.value, 10);
+        if (isNaN(n)) { el.value = ""; return; }
+        if (n > max) n = max;
+        el.value = pad2(n);
+      });
+
+      el.addEventListener("keydown", function (e) {
+        var max = parseInt(el.dataset.max || "59", 10);
+
+        if (e.key === "Backspace" && el.value === "" && i > 0) {
+          inputs[i - 1].focus();
+          inputs[i - 1].select();
+          e.preventDefault();
+          return;
+        }
+        if (e.key === "ArrowRight" && i < inputs.length - 1) {
+          inputs[i + 1].focus(); inputs[i + 1].select();
+          e.preventDefault(); return;
+        }
+        if (e.key === "ArrowLeft" && i > 0) {
+          inputs[i - 1].focus(); inputs[i - 1].select();
+          e.preventDefault(); return;
+        }
+        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+          e.preventDefault();
+          var n = parseInt(el.value, 10);
+          if (isNaN(n)) n = 0;
+          n += (e.key === "ArrowUp" ? 1 : -1);
+          if (n < 0) n = max;
+          if (n > max) n = 0;
+          el.value = pad2(n);
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          compute();
+        }
+      });
+
+      el.addEventListener("focus", function () { el.select(); });
+    });
+  }
+
+  bindTimeInputs([startHEl, startMEl, startSEl]);
+  bindTimeInputs([recHEl, recMEl]);
+  bindTimeInputs([durHEl, durMEl, durSEl]);
+
+  /* ================= 渲染 ================= */
+  function renderError(title, desc) {
+    resultEl.innerHTML =
+      '<div class="alert err">' +
+        '<div class="ico">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+               'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<circle cx="12" cy="12" r="9"></circle>' +
+            '<path d="M12 7.6v5.2"></path>' +
+            '<path d="M12 16.4h.01"></path>' +
+          '</svg>' +
+        '</div>' +
+        '<div>' +
+          '<h3>' + esc(title) + '</h3>' +
+          '<p>' + esc(desc) + '</p>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderSuccess(posMs, durMs, startParts, recordParts, isNextDay) {
+    var pos = fmtHMS(posMs);
+    var remaining = null;
+    var pct = null;
+
+    if (durMs !== null) {
+      remaining = Math.max(0, durMs - posMs);
+      pct = durMs > 0 ? Math.min(100, Math.max(0, (posMs / durMs) * 100)) : 100;
+    }
+
+    var html = '<div class="res-card">';
+
+    html += '<div class="res-head">';
+    html +=   '<div>';
+    html +=     '<div class="res-label">空降位置 · 时间轴</div>';
+    html +=     '<div class="big">' + pos + '</div>';
+    html +=   '</div>';
+    html +=   '<button class="copy" type="button" data-val="' + pos + '">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                     'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+                  '<rect x="9" y="9" width="12" height="12" rx="2.5"></rect>' +
+                  '<path d="M5.5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5v1"></path>' +
+                '</svg>' +
+                '<span>复制</span>' +
+              '</button>';
+    html += '</div>';
+
+    html += '<div class="meta">';
+    html +=   '<div><span>回放起点</span><strong>' + esc(fmtParts(startParts)) + '</strong></div>';
+    html +=   '<div><span>记录时间</span><strong>' + esc(fmtParts(recordParts)) +
+                (isNextDay ? '<em>次日</em>' : '') + '</strong></div>';
+    html +=   '<div><span>距开始</span><strong>+' + pos + '</strong></div>';
+    if (durMs !== null) {
+      html += '<div><span>剩余时长</span><strong>' + fmtHMS(remaining) + '</strong></div>';
+    }
+    html += '</div>';
+
+    if (pct !== null) {
+      html += '<div class="bar"><i style="width:' + pct.toFixed(2) + '%"></i></div>';
+      html += '<div class="bar-note"><span>' + pos + '</span><span>' + fmtHMS(durMs) + '</span></div>';
+    } else {
+      html += '<div class="note">未填写回放总时长，仅显示空降位置</div>';
+    }
+
+    html += '</div>';
+    resultEl.innerHTML = html;
+  }
+
+  /* ================= 主逻辑 ================= */
+  function compute() {
+    /* ---- 1. 起始日期 ---- */
+    var dateStr = String(startDateEl.value || "").trim();
+    var dm = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!dm) {
+      renderError("请填写回放起始日期", "点击日期框选择完整的年-月-日。");
+      return;
+    }
+    var sy = +dm[1], smo = +dm[2], sd = +dm[3];
+    var chk = new Date(Date.UTC(sy, smo - 1, sd));
+    if (chk.getUTCFullYear() !== sy ||
+        chk.getUTCMonth() !== smo - 1 ||
+        chk.getUTCDate() !== sd) {
+      renderError("起始日期无效", "请检查年、月、日是否正确。");
+      return;
+    }
+
+    /* ---- 2. 起始时分秒 ---- */
+    var sh  = readInt(startHEl, 0);
+    var smi = readInt(startMEl, 0);
+    var ss  = readInt(startSEl, 0);
+    if (sh > 23 || smi > 59 || ss > 59) {
+      renderError("起始时间有误", "小时应在 0–23，分钟与秒应在 0–59 之间。");
+      return;
+    }
+
+    var startParts = { y: sy, mo: smo, d: sd, h: sh, mi: smi, s: ss };
+    var startAbs = Date.UTC(sy, smo - 1, sd, sh, smi, ss, 0);
+
+    /* ---- 3. 记录时间（仅时分） ---- */
+    var rawRecH = String(recHEl.value || "").trim();
+    var rawRecM = String(recMEl.value || "").trim();
+    if (rawRecH === "" && rawRecM === "") {
+      renderError("请输入记录时间", "记录时间精确到分钟，请至少填写小时与分钟。");
+      return;
+    }
+    var rh  = rawRecH === "" ? 0 : parseInt(rawRecH, 10);
+    var rmi = rawRecM === "" ? 0 : parseInt(rawRecM, 10);
+    if (isNaN(rh) || isNaN(rmi) || rh > 23 || rmi > 59) {
+      renderError("记录时间有误", "小时应在 0–23，分钟应在 0–59 之间。");
+      return;
+    }
+
+    /* ---- 4. 推算日期：早于起始时刻则按次日算 ---- */
+    var isNextDay = (rh * 60 + rmi) < (sh * 60 + smi);
+    var ry = sy, rmo = smo, rd = sd;
+    if (isNextDay) {
+      var nd = new Date(Date.UTC(sy, smo - 1, sd) + 86400000);
+      ry = nd.getUTCFullYear();
+      rmo = nd.getUTCMonth() + 1;
+      rd = nd.getUTCDate();
+    }
+
+    var recordParts = { y: ry, mo: rmo, d: rd, h: rh, mi: rmi, s: 0 };
+    var recordAbs = Date.UTC(ry, rmo - 1, rd, rh, rmi, 0, 0);
+
+    var posMs = Math.max(0, recordAbs - startAbs);
+
+    /* ---- 5. 总时长 ---- */
+    var hasDur = (String(durHEl.value).trim() !== "" ||
+                  String(durMEl.value).trim() !== "" ||
+                  String(durSEl.value).trim() !== "");
+    var durMs = null;
+    if (hasDur) {
+      var dH = readInt(durHEl, 0);
+      var dM = readInt(durMEl, 0);
+      var dS = readInt(durSEl, 0);
+      if (dM > 59 || dS > 59) {
+        renderError("总时长格式有误", "分钟与秒应在 0–59 之间，请将进位换算到时或分。");
+        return;
+      }
+      durMs = ((dH * 60 + dM) * 60 + dS) * 1000;
+    }
+
+    /* ---- 6. 越界判断 ---- */
+    if (durMs !== null && posMs > durMs) {
+      renderError(
+        "回放不包含此类内容",
+        "记录时间已超出回放总时长。当前位置约为 " + fmtHMS(posMs) +
+        "，而回放总时长仅 " + fmtHMS(durMs) + "。"
+      );
+      return;
+    }
+
+    renderSuccess(posMs, durMs, startParts, recordParts, isNextDay);
+  }
+
+  /* ================= 复制 ================= */
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+  }
+
+  function copyText(text, btn) {
+    var label = btn.querySelector("span");
+    var original = label ? label.textContent : "复制";
+
+    function done() {
+      btn.classList.add("done");
+      if (label) label.textContent = "已复制";
+      setTimeout(function () {
+        btn.classList.remove("done");
+        if (label) label.textContent = original;
+      }, 1400);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {
+        legacyCopy(text);
+        done();
+      });
+    } else {
+      legacyCopy(text);
+      done();
+    }
+  }
+
+  resultEl.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest(".copy") : null;
+    if (!btn) return;
+    copyText(btn.getAttribute("data-val") || "", btn);
+  });
+
+  /* ================= 事件 ================= */
+  calcBtn.addEventListener("click", compute);
+
+  resetBtn.addEventListener("click", function () {
+    startDateEl.value = "2026-09-14";
+    startHEl.value = "22";
+    startMEl.value = "00";
+    startSEl.value = "03";
+    recHEl.value = "";
+    recMEl.value = "";
+    durHEl.value = "";
+    durMEl.value = "";
+    durSEl.value = "";
+    resultEl.innerHTML = "";
+    recHEl.focus();
+  });
+
+  startDateEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); compute(); }
+  });
+
+  /* 兜底：若 js/app.js 未提供 initSite，也不报错 */
+  if (typeof window.initSite !== "function") {
+    window.initSite = function () {};
+  }
+
+})();
+</script>
+<script src="js/app.js"></script>
+<script>
+  // 页面初始化
+  document.addEventListener('DOMContentLoaded', () => initSite());
+</script>
+</body>
+</html>
