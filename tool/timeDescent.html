@@ -566,7 +566,7 @@
   <div class="footer-inner">
     <div class="footer-brand">🌸 ZMXC</div>
     <div class="footer-links">
-      <a id="reportLink" class="footer-link" href="mailto:1578929129@qq.com" role="button">📧 侵权投诉</a>
+      <a href="mailto:1578929129@qq.com" class="footer-link">📧 侵权投诉</a>
     </div>
     <div class="footer-copy">©️ ZMXC · 星辰桑切片收录站</div>
   </div>
@@ -689,7 +689,6 @@
   var resultEl = document.getElementById("result");
   var calcBtn  = document.getElementById("calcBtn");
   var resetBtn = document.getElementById("resetBtn");
-  var reportLink = document.getElementById("reportLink");
 
   /* ================= 工具 ================= */
   function esc(s) {
@@ -724,33 +723,6 @@
     if (v === "") return def;
     var n = parseInt(v, 10);
     return isNaN(n) ? def : n;
-  }
-
-  /* ================= 侵权投诉邮箱跳转（多重重试保障） ================= */
-  function openMailClient(){
-    var mailto = "mailto:1578929129@qq.com?subject=" + encodeURIComponent("【侵权投诉】回放空降辅助网页");
-    try {
-      var iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.setAttribute("aria-hidden", "true");
-      document.body.appendChild(iframe);
-      iframe.contentWindow.location.href = mailto;
-      setTimeout(function(){
-        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      }, 1200);
-    } catch (err) {
-      // 忽略，下面继续兜底
-    }
-    try { window.location.href = mailto; } catch (err2) { /* 忽略 */ }
-    try { window.open(mailto, "_self"); } catch (err3) { /* 忽略 */ }
-  }
-
-  if (reportLink) {
-    reportLink.addEventListener("click", function (e) {
-      e.preventDefault();
-      openMailClient();
-      return false;
-    });
   }
 
   /* ================= 应用默认值 ================= */
@@ -1062,4 +1034,4 @@
   document.addEventListener('DOMContentLoaded', () => initSite());
 </script>
 </body>
-          </html>
+</html>
