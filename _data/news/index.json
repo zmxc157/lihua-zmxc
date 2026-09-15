@@ -16,6 +16,10 @@
     {
       "key": "advertisement",
       "label": "📣广告"
+    },
+    {
+      "key": "update",
+      "label": "🧰更新"
     }
   ],
   "items": [
