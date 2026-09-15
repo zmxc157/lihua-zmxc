@@ -147,10 +147,9 @@
   /* ===== 表单 ===== */
   .form{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px 20px;
+    grid-template-columns:1fr;
+    gap:24px;
   }
-  .field.full{grid-column:1 / -1;}
 
   .label{
     display:flex;align-items:center;gap:9px;
@@ -188,7 +187,7 @@
 
   .date-input{
     flex:0 0 auto;
-    width:196px;
+    width:200px;
     padding:13px 14px;
     font-size:14px;
     letter-spacing:.03em;
@@ -451,8 +450,6 @@
   @media (max-width:760px){
     body{padding:26px 14px 0;}
     .card{padding:24px;border-radius:24px;}
-    .form{grid-template-columns:1fr;}
-    .field.full{grid-column:auto;}
     .head{gap:13px;margin-bottom:24px;}
     .badge{width:50px;height:50px;flex:0 0 50px;border-radius:17px;}
     h1{font-size:19px;}
@@ -498,7 +495,7 @@
   <div class="form">
 
     <!-- 回放起始时间 -->
-    <div class="field full">
+    <div class="field">
       <label class="label">回放起始时间 <span class="tag">年月日 + 时分秒</span></label>
       <div class="time-row">
         <input id="startDate" class="input date-input" type="date" />
@@ -518,15 +515,18 @@
 
     <!-- 记录时间 -->
     <div class="field">
-      <label class="label">记录时间 <span class="tag">精确到分钟</span></label>
-      <div class="time-group">
-        <input id="recH" class="input time-input" type="text" inputmode="numeric"
-               maxlength="2" placeholder="00" data-max="23" aria-label="记录小时" />
-        <span class="tsep">:</span>
-        <input id="recM" class="input time-input" type="text" inputmode="numeric"
-               maxlength="2" placeholder="00" data-max="59" aria-label="记录分钟" />
+      <label class="label">记录时间 <span class="tag">日期 + 时分</span></label>
+      <div class="time-row">
+        <input id="recDate" class="input date-input" type="date" aria-label="记录日期" />
+        <div class="time-group">
+          <input id="recH" class="input time-input" type="text" inputmode="numeric"
+                 maxlength="2" placeholder="00" data-max="23" aria-label="记录小时" />
+          <span class="tsep">:</span>
+          <input id="recM" class="input time-input" type="text" inputmode="numeric"
+                 maxlength="2" placeholder="00" data-max="59" aria-label="记录分钟" />
+        </div>
       </div>
-      <div class="helper">只需时分；若早于起始时刻，将自动按次日推算</div>
+      <div class="helper">跨日期时请同步修改日期；若早于回放起始时刻，将提示不包含回放</div>
     </div>
 
     <!-- 回放总时长 -->
@@ -681,6 +681,7 @@
   var startHEl = document.getElementById("startH");
   var startMEl = document.getElementById("startM");
   var startSEl = document.getElementById("startS");
+  var recDateEl = document.getElementById("recDate");
   var recHEl   = document.getElementById("recH");
   var recMEl   = document.getElementById("recM");
   var durHEl   = document.getElementById("durH");
@@ -725,17 +726,32 @@
     return isNaN(n) ? def : n;
   }
 
+  /** 解析日期字符串 YYYY-MM-DD，返回 {y,mo,d} 或 null */
+  function parseDate(str){
+    var m = String(str || "").trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var chk = new Date(Date.UTC(y, mo - 1, d));
+    if (chk.getUTCFullYear() !== y ||
+        chk.getUTCMonth() !== mo - 1 ||
+        chk.getUTCDate() !== d) return null;
+    return { y: y, mo: mo, d: d };
+  }
+
   /* ================= 应用默认值 ================= */
   function applyDefaults(){
-    startDateEl.value = todayStr();   // 默认读取当前时钟日期
+    var today = todayStr();
+
+    startDateEl.value = today;
     startHEl.value = "22";
     startMEl.value = "00";
     startSEl.value = "00";
 
-    recHEl.value = "";                // 记录时间默认留空
+    recDateEl.value = today;   // 记录日期默认与起始日期一致
+    recHEl.value = "";
     recMEl.value = "";
 
-    durHEl.value = "02";              // 总时长默认 2 小时整
+    durHEl.value = "02";
     durMEl.value = "00";
     durSEl.value = "00";
   }
@@ -825,7 +841,7 @@
       '</div>';
   }
 
-  function renderSuccess(posMs, durMs, startParts, recordParts, isNextDay) {
+  function renderSuccess(posMs, durMs, startParts, recordParts, dayDiff) {
     var pos = fmtHMS(posMs);
     var remaining = null;
     var pct = null;
@@ -834,6 +850,11 @@
       remaining = Math.max(0, durMs - posMs);
       pct = durMs > 0 ? Math.min(100, Math.max(0, (posMs / durMs) * 100)) : 100;
     }
+
+    // 跨天标记
+    var dayBadge = "";
+    if (dayDiff === 1) dayBadge = '<em>次日</em>';
+    else if (dayDiff > 1) dayBadge = '<em>+' + dayDiff + '天</em>';
 
     var html = '<div class="res-card">';
 
@@ -855,7 +876,7 @@
     html += '<div class="meta">';
     html +=   '<div><span>回放起点</span><strong>' + esc(fmtParts(startParts)) + '</strong></div>';
     html +=   '<div><span>记录时间</span><strong>' + esc(fmtParts(recordParts)) +
-                (isNextDay ? '<em>次日</em>' : '') + '</strong></div>';
+                dayBadge + '</strong></div>';
     html +=   '<div><span>距开始</span><strong>+' + pos + '</strong></div>';
     if (durMs !== null) {
       html += '<div><span>剩余时长</span><strong>' + fmtHMS(remaining) + '</strong></div>';
@@ -876,18 +897,9 @@
   /* ================= 主逻辑 ================= */
   function compute() {
     /* ---- 1. 起始日期 ---- */
-    var dateStr = String(startDateEl.value || "").trim();
-    var dm = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!dm) {
+    var startD = parseDate(startDateEl.value);
+    if (!startD) {
       renderError("请填写回放起始日期", "点击日期框选择完整的年-月-日。");
-      return;
-    }
-    var sy = +dm[1], smo = +dm[2], sd = +dm[3];
-    var chk = new Date(Date.UTC(sy, smo - 1, sd));
-    if (chk.getUTCFullYear() !== sy ||
-        chk.getUTCMonth() !== smo - 1 ||
-        chk.getUTCDate() !== sd) {
-      renderError("起始日期无效", "请检查年、月、日是否正确。");
       return;
     }
 
@@ -900,10 +912,17 @@
       return;
     }
 
-    var startParts = { y: sy, mo: smo, d: sd, h: sh, mi: smi, s: ss };
-    var startAbs = Date.UTC(sy, smo - 1, sd, sh, smi, ss, 0);
+    var startParts = { y: startD.y, mo: startD.mo, d: startD.d, h: sh, mi: smi, s: ss };
+    var startAbs = Date.UTC(startD.y, startD.mo - 1, startD.d, sh, smi, ss, 0);
 
-    /* ---- 3. 记录时间（仅时分） ---- */
+    /* ---- 3. 记录日期 ---- */
+    var recD = parseDate(recDateEl.value);
+    if (!recD) {
+      renderError("请填写记录日期", "点击记录日期框选择完整的年-月-日。");
+      return;
+    }
+
+    /* ---- 4. 记录时分 ---- */
     var rawRecH = String(recHEl.value || "").trim();
     var rawRecM = String(recMEl.value || "").trim();
     if (rawRecH === "" && rawRecM === "") {
@@ -917,22 +936,27 @@
       return;
     }
 
-    /* ---- 4. 推算日期：早于起始时刻则按次日算 ---- */
-    var isNextDay = (rh * 60 + rmi) < (sh * 60 + smi);
-    var ry = sy, rmo = smo, rd = sd;
-    if (isNextDay) {
-      var nd = new Date(Date.UTC(sy, smo - 1, sd) + 86400000);
-      ry = nd.getUTCFullYear();
-      rmo = nd.getUTCMonth() + 1;
-      rd = nd.getUTCDate();
+    var recordParts = { y: recD.y, mo: recD.mo, d: recD.d, h: rh, mi: rmi, s: 0 };
+    var recordAbs = Date.UTC(recD.y, recD.mo - 1, recD.d, rh, rmi, 0, 0);
+
+    /* ---- 5. 位置计算（真实日期差） ---- */
+    var posMs = recordAbs - startAbs;
+
+    if (posMs < 0) {
+      renderError(
+        "当前时段不包含回放",
+        "记录时间（" + fmtParts(recordParts) + "）早于回放起始时间（" +
+        fmtParts(startParts) + "），该时刻尚未开始录制。"
+      );
+      return;
     }
 
-    var recordParts = { y: ry, mo: rmo, d: rd, h: rh, mi: rmi, s: 0 };
-    var recordAbs = Date.UTC(ry, rmo - 1, rd, rh, rmi, 0, 0);
+    /* ---- 6. 天数差（用于结果展示） ---- */
+    var startDayKey = Date.UTC(startD.y, startD.mo - 1, startD.d);
+    var recDayKey   = Date.UTC(recD.y, recD.mo - 1, recD.d);
+    var dayDiff = Math.round((recDayKey - startDayKey) / 86400000);
 
-    var posMs = Math.max(0, recordAbs - startAbs);
-
-    /* ---- 5. 总时长 ---- */
+    /* ---- 7. 总时长 ---- */
     var hasDur = (String(durHEl.value).trim() !== "" ||
                   String(durMEl.value).trim() !== "" ||
                   String(durSEl.value).trim() !== "");
@@ -948,7 +972,7 @@
       durMs = ((dH * 60 + dM) * 60 + dS) * 1000;
     }
 
-    /* ---- 6. 越界判断 ---- */
+    /* ---- 8. 越界判断 ---- */
     if (durMs !== null && posMs > durMs) {
       renderError(
         "回放不包含此类内容",
@@ -958,7 +982,7 @@
       return;
     }
 
-    renderSuccess(posMs, durMs, startParts, recordParts, isNextDay);
+    renderSuccess(posMs, durMs, startParts, recordParts, dayDiff);
   }
 
   /* ================= 复制 ================= */
@@ -1015,6 +1039,9 @@
   });
 
   startDateEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); compute(); }
+  });
+  recDateEl.addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); compute(); }
   });
 
