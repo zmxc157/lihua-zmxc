@@ -11,7 +11,7 @@ const SLICE_PAGE_SIZE = 10;
 let sliceSearchTerm = '';
 
 /* 内置加密的 GitHub Token（AES-256-GCM，密钥 zmxc233 由站长持有，不写在文件内） */
-const EMBEDDED_GH_TOKEN_ENC = '{"{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"HIBbsQ9V20LEsb4sft54Fw==","iv":"d+ItN7SVQ1WQ5+ER","data":"BtUZUcoT7sko6o6FOkI75pS4POJiynb2L5Khxs36LMg0nUzzc3zdDdbDgSeJgeJf66T+/DrGhplthH/qPTrbEi6V21OoAk9Qo3yL45c1E3tmCDvEi+a5fmeS+kKgBUmsKlzYi2tLsiFl0+77Kg=="}"}';
+const EMBEDDED_GH_TOKEN_ENC = '{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"HIBbsQ9V20LEsb4sft54Fw==","iv":"d+ItN7SVQ1WQ5+ER","data":"BtUZUcoT7sko6o6FOkI75pS4POJiynb2L5Khxs36LMg0nUzzc3zdDdbDgSeJgeJf66T+/DrGhplthH/qPTrbEi6V21OoAk9Qo3yL45c1E3tmCDvEi+a5fmeS+kKgBUmsKlzYi2tLsiFl0+77Kg=="}';
 
 /* ---- 初始化 ---- */
 async function initAdmin() {
