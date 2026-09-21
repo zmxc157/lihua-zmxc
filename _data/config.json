@@ -1,30 +1,20 @@
 {
-  "title": "🌸 星辰桑的栗花切片站 🌸",
-  "heroTitle": "🌸 星辰桑的栗花小小切片站 🌸",
-  "description": "这是一个没什么技术的砖业人士制作的切片导航网站喵",
+  "title": "🌸 星辰桑切片站 🌸",
+  "heroTitle": "🌸 星辰桑切片站 🌸",
+  "description": "收录星辰桑的所有可爱切片，愿你喜欢 ✨",
   "icon": "",
-  "password": "",
+  "nowLoadingImage": "",
   "passwordHash": "h75b7af2f",
   "categories": [
     "歌切",
     "整活",
-    "未分类",
-    "弹唱"
+    "未分类"
   ],
-  "questionnaires": [
-    {
-      "id": "q-1788756233667",
-      "title": "切片收录！",
-      "url": "https://v.wjx.cn/vm/Q0a0tYr.aspx#",
-      "description": "栗子厨您好，感谢您对本站的支持。\n\n为更好地服务社区，我们上线了一份投稿问卷，面向以下两类用户：\n\n1、普通栗子厨 — 提交切片请求，我们将评估并酌情处理发布。\n\n2、切片man — 提交您已制作的切片作品，经审核后将上架至本站。\n\n感谢您的参与。\n今后也请您多多支持「逐梦星辰」。",
-      "position": "list-top",
-      "showFab": false
-    }
-  ],
+  "questionnaires": [],
   "github": {
     "owner": "zmxc157",
     "repo": "lihua-zmxc",
     "branch": "main",
-    "tokenEncrypted": "{"alg":"AES-256-GCM/PBKDF2-SHA256","salt":"HIBbsQ9V20LEsb4sft54Fw==","iv":"d+ItN7SVQ1WQ5+ER","data":"BtUZUcoT7sko6o6FOkI75pS4POJiynb2L5Khxs36LMg0nUzzc3zdDdbDgSeJgeJf66T+/DrGhplthH/qPTrbEi6V21OoAk9Qo3yL45c1E3tmCDvEi+a5fmeS+kKgBUmsKlzYi2tLsiFl0+77Kg=="} "
+    "tokenEncrypted": "{\"alg\":\"AES-256-GCM/PBKDF2-SHA256\",\"salt\":\"HIBbsQ9V20LEsb4sft54Fw==\",\"iv\":\"d+ItN7SVQ1WQ5+ER\",\"data\":\"BtUZUcoT7sko6o6FOkI75pS4POJiynb2L5Khxs36LMg0nUzzc3zdDdbDgSeJgeJf66T+/DrGhplthH/qPTrbEi6V21OoAk9Qo3yL45c1E3tmCDvEi+a5fmeS+kKgBUmsKlzYi2tLsiFl0+77Kg==\"}"
   }
 }
