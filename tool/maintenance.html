@@ -3,62 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>メンテナンス中 · 网站维护中</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E" />
+  <title>维护更新说明 · 星辰桑切片站</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='25,6 75,6 100,50 75,94 25,94 0,50' fill='%231e6fe0'/%3E%3C/svg%3E" />
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      /* 蔚蓝档案（基沃托斯）配色 */
-      --ba-deep:   #0a1426;
-      --ba-navy:   #0d1b33;
-      --ba-blue:   #2773e1;
-      --ba-sky:    #53bcfe;
-      --ba-cyan:   #7fd8ff;
-      --ba-line:   rgba(83, 188, 254, 0.45);
-      --ba-text:   #d7ecff;
-      --ba-sub:    #8fb6e0;
+      /* 蔚蓝档案（基沃托斯）官方配色 */
+      --ba-deep:   #06111f;
+      --ba-navy:   #0b1c33;
+      --ba-blue:   #1e6fe0;
+      --ba-sky:    #4db8ff;
+      --ba-cyan:   #8fe3ff;
+      --ba-line:   rgba(77, 184, 255, 0.45);
+      --ba-text:   #e6f3ff;
+      --ba-sub:    #9cc2e6;
       --ba-gold:   #ffd56b;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     html, body { height: 100%; }
 
     body {
       font-family: "M PLUS Rounded 1c", "Zen Maru Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
       color: var(--ba-text);
       background:
-        radial-gradient(1200px 700px at 50% -10%, rgba(46, 139, 208, 0.30), transparent 60%),
-        radial-gradient(900px 600px at 85% 110%, rgba(83, 188, 254, 0.12), transparent 60%),
-        linear-gradient(160deg, var(--ba-navy) 0%, var(--ba-deep) 100%);
+        radial-gradient(1200px 720px at 50% -12%, rgba(30, 111, 224, 0.32), transparent 60%),
+        radial-gradient(900px 640px at 88% 112%, rgba(77, 184, 255, 0.12), transparent 60%),
+        linear-gradient(165deg, var(--ba-navy) 0%, var(--ba-deep) 100%);
       min-height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       position: relative;
+      padding: 24px;
+    }
+
+    /* 六边形蜂窝网格（基沃托斯标志性几何） */
+    .hexgrid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52' viewBox='0 0 52 52'%3E%3Cg fill='none' stroke='%234db8ff' stroke-width='1.2'%3E%3Cpath d='M47 26 L38 36 L16 36 L7 26 L16 16 L38 16 Z'/%3E%3Cpath d='M20 36 L11 46 L11 50 M32 36 L41 46 L41 50'/%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.07;
     }
 
     /* 远景星点 */
     .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
     .stars i {
-      position: absolute;
-      width: 2px; height: 2px;
-      background: #cfeaff;
-      border-radius: 50%;
-      opacity: .5;
-      box-shadow: 0 0 6px rgba(127, 216, 255, .8);
-      animation: twinkle 3.5s ease-in-out infinite;
+      position: absolute; width: 2px; height: 2px;
+      background: #cfeaff; border-radius: 50%; opacity: .5;
+      box-shadow: 0 0 6px rgba(143, 227, 255, .8);
+      animation: twinkle 3.6s ease-in-out infinite;
     }
-    @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.8} }
+    @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.85} }
 
-    /* 漂浮几何粒子（十字 / 圆点，军事学园风） */
+    /* 漂浮几何粒子 */
     .ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
     .ambient span {
-      position: absolute;
-      color: rgba(127, 216, 255, .35);
-      font-size: 18px;
-      animation: drift linear infinite;
+      position: absolute; color: rgba(143, 227, 255, .35);
+      font-size: 16px; animation: drift linear infinite;
     }
     @keyframes drift {
       0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
@@ -67,178 +69,201 @@
       100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
     }
 
-    /* 中心面板 */
-    .panel {
-      position: relative;
-      z-index: 1;
-      width: min(92vw, 540px);
-      padding: 46px 38px 40px;
-      text-align: center;
-      background: linear-gradient(160deg, rgba(20, 42, 75, 0.82), rgba(10, 22, 44, 0.86));
-      border: 1px solid var(--ba-line);
-      border-radius: 22px;
-      box-shadow:
-        0 0 0 1px rgba(83, 188, 254, 0.12),
-        0 24px 70px rgba(0, 0, 0, 0.55),
-        0 0 50px rgba(39, 115, 225, 0.25);
-      backdrop-filter: blur(6px);
+    /* 顶部 LOGO 条（仿官方站点导航） */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 2;
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 24px;
+      background: linear-gradient(180deg, rgba(6,17,31,.85), rgba(6,17,31,0));
+    }
+    .topbar .mark {
+      width: 30px; height: 30px;
+      clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
+      background: linear-gradient(135deg, var(--ba-sky), var(--ba-blue));
+      box-shadow: 0 0 14px rgba(77,184,255,.6);
+      flex: none;
+    }
+    .topbar .wm {
+      font-weight: 800; letter-spacing: .14em; font-size: 15px;
+      color: var(--ba-text);
+    }
+    .topbar .wm small {
+      display: block; font-weight: 500; letter-spacing: .3em;
+      font-size: 9px; color: var(--ba-sub); margin-top: 2px;
     }
 
-    /* SCHALE 风格光环（不完整圆环） */
-    .halo {
-      width: 92px; height: 92px;
-      margin: 0 auto 18px;
-      border-radius: 50%;
-      border: 4px solid transparent;
-      border-top-color: var(--ba-sky);
-      border-right-color: var(--ba-blue);
-      background:
-        radial-gradient(circle at 50% 50%, rgba(83, 188, 254, 0.18), transparent 62%);
-      position: relative;
-      animation: spin 6s linear infinite;
-      box-shadow: 0 0 24px rgba(83, 188, 254, 0.35);
+    /* 主面板（军事学园风 · 边角框） */
+    .panel {
+      position: relative; z-index: 1;
+      width: min(94vw, 560px);
+      padding: 52px 40px 40px;
+      text-align: center;
+      background: linear-gradient(160deg, rgba(18,40,72,.86), rgba(9,20,40,.9));
+      border: 1px solid var(--ba-line);
+      border-radius: 18px;
+      box-shadow:
+        0 0 0 1px rgba(77,184,255,.10),
+        0 26px 80px rgba(0,0,0,.55),
+        0 0 56px rgba(30,111,224,.25);
+      backdrop-filter: blur(6px);
     }
-    .halo::after {
-      content: "🔧";
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 34px;
-      animation: spin 6s linear infinite reverse;
+    /* 四角边角框 */
+    .corner { position: absolute; width: 22px; height: 22px; border: 2px solid var(--ba-cyan); filter: drop-shadow(0 0 5px rgba(143,227,255,.7)); }
+    .corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
+    .corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 6px; }
+    .corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 6px; }
+    .corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 6px; }
+
+    /* SCHALE 风格徽记（六边形 + 不完整光环） */
+    .emblem {
+      width: 88px; height: 88px; margin: 0 auto 16px;
+      position: relative; display: grid; place-items: center;
+    }
+    .emblem .hex {
+      width: 64px; height: 64px;
+      clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
+      background: linear-gradient(135deg, var(--ba-sky), var(--ba-blue));
+      display: grid; place-items: center;
+      font-size: 30px;
+      box-shadow: 0 0 22px rgba(77,184,255,.5);
+    }
+    .emblem .halo {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: var(--ba-cyan);
+      border-right-color: rgba(143,227,255,.4);
+      animation: spin 7s linear infinite;
+      box-shadow: 0 0 16px rgba(143,227,255,.3);
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .jp {
-      font-size: 13px;
-      letter-spacing: 0.18em;
-      color: var(--ba-sub);
-      margin-bottom: 6px;
+    .tag {
+      font-size: 12px; letter-spacing: .26em; color: var(--ba-sub);
+      margin-bottom: 8px;
     }
 
-    /* BA 风渐变标题（浮空通透感） */
     h1 {
-      font-size: 34px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      background: linear-gradient(135deg, #bfeaff 0%, #5fb8ff 55%, #2773e1 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 22px rgba(83, 188, 254, 0.45);
-      filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.18));
+      font-size: 36px; font-weight: 800; letter-spacing: .06em;
+      background: linear-gradient(135deg, #cdeeff 0%, #6fc0ff 52%, #1e6fe0 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 0 24px rgba(77,184,255,.45);
       margin-bottom: 4px;
     }
+    .sub-en {
+      font-size: 11px; letter-spacing: .42em; color: var(--ba-sky);
+      margin-bottom: 18px; opacity: .8;
+    }
 
-    .status {
-      margin: 16px 0 6px;
-      font-size: 17px;
-      font-weight: 500;
-      color: var(--ba-text);
+    .lead {
+      font-size: 14px; line-height: 1.85; color: var(--ba-sub);
+      margin: 0 auto 6px; max-width: 420px;
     }
 
     .divider {
-      height: 1px;
-      margin: 20px auto;
-      width: 70%;
+      height: 1px; margin: 22px auto; width: 72%;
       background: linear-gradient(to right, transparent, var(--ba-line), transparent);
     }
 
-    /* 信息行 */
-    .info {
-      text-align: left;
-      background: rgba(13, 27, 51, 0.55);
-      border: 1px solid rgba(83, 188, 254, 0.22);
-      border-left: 3px solid var(--ba-sky);
-      border-radius: 14px;
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      font-size: 15px;
+    /* 公告信息（■ 分节，官方公告体） */
+    .notice {
+      text-align: left; max-width: 440px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 14px;
+      font-size: 15px; line-height: 1.7;
     }
-    .info .row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-    .info .k { color: var(--ba-sky); font-weight: 700; white-space: nowrap; }
-    .info .v { color: var(--ba-text); }
-    .info a {
-      color: var(--ba-cyan);
-      text-decoration: none;
-      font-weight: 700;
-      border-bottom: 1px dashed rgba(127, 216, 255, 0.6);
+    .notice .item { display: flex; gap: 10px; align-items: flex-start; }
+    .notice .item .mk { color: var(--ba-sky); font-weight: 800; flex: none; }
+    .notice .item .tx { color: var(--ba-text); }
+    .notice .item .tx b { color: var(--ba-cyan); font-weight: 700; }
+    .notice a {
+      color: var(--ba-cyan); text-decoration: none; font-weight: 700;
+      border-bottom: 1px dashed rgba(143,227,255,.6);
     }
-    .info a:hover { color: #fff; }
+    .notice a:hover { color: #fff; }
+
+    .note {
+      text-align: left; max-width: 440px; margin: 16px auto 0;
+      font-size: 12.5px; line-height: 1.7; color: var(--ba-sub);
+    }
+    .note::before { content: "※ "; color: var(--ba-gold); font-weight: 800; }
 
     /* BA 风按钮 */
     .btn {
-      display: inline-block;
-      margin-top: 24px;
-      padding: 12px 30px;
-      border: none;
-      border-radius: 12px;
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      color: #fff;
-      cursor: pointer;
-      text-decoration: none;
+      display: inline-block; margin-top: 26px;
+      padding: 12px 32px; border: none; border-radius: 12px;
+      font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .06em;
+      color: #fff; cursor: pointer; text-decoration: none;
       background: linear-gradient(135deg, var(--ba-blue), var(--ba-sky));
-      box-shadow: 0 8px 22px rgba(39, 115, 225, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 22px rgba(30,111,224,.45), inset 0 1px 0 rgba(255,255,255,.3);
       transition: transform .15s ease, filter .15s ease;
     }
     .btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
     .btn:active { transform: translateY(0); }
 
     .footer {
-      margin-top: 22px;
-      font-size: 12px;
-      color: var(--ba-sub);
-      letter-spacing: 0.04em;
+      margin-top: 24px; font-size: 13px; line-height: 1.7; color: var(--ba-sub);
     }
+    .footer .sign { margin-top: 8px; color: var(--ba-text); font-weight: 700; letter-spacing: .04em; }
     .footer .star { color: var(--ba-gold); }
   </style>
 </head>
 <body>
-  <!-- 远景星点 -->
+  <div class="hexgrid"></div>
   <div class="stars" id="stars"></div>
-  <!-- 漂浮几何粒子 -->
   <div class="ambient" id="ambient"></div>
 
-  <main class="panel">
-    <div class="halo"></div>
-    <p class="jp">ただいまメンテナンス中です</p>
-    <h1>网站维护中</h1>
+  <header class="topbar">
+    <span class="mark"></span>
+    <span class="wm">星辰桑切片站<small>XINGCHEN · SCHALE</small></span>
+  </header>
 
-    <p class="status">当前网站正在维护中</p>
+  <main class="panel">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+
+    <div class="emblem">
+      <span class="halo"></span>
+      <span class="hex">🔧</span>
+    </div>
+
+    <p class="tag">ただいまメンテナンス中です</p>
+    <h1>维护更新说明</h1>
+    <p class="sub-en">WEBSITE MAINTENANCE NOTICE</p>
+
+    <p class="lead">欢迎连接【什亭之箱】，老师。<br/>为保证更好的网站体验，本站点计划进行维护更新。维护期间网站将暂时无法访问，由此给您带来的不便，敬请谅解。</p>
 
     <div class="divider"></div>
 
-    <div class="info">
-      <div class="row">
-        <span class="k">📧 联系邮箱</span>
-        <span class="v"><a href="mailto:1578929129@qq.com">1578929129@qq.com</a></span>
+    <div class="notice">
+      <div class="item">
+        <span class="mk">■</span>
+        <span class="tx">维护时间　<b>2026年10月20日 12:00 起</b>（长期维护，恢复时间将另行通知）</span>
       </div>
-      <div class="row">
-        <span class="k">🕒 维护时间</span>
-        <span class="v">10月20日 12：00 ~ 9999/12/31</span>
+      <div class="item">
+        <span class="mk">■</span>
+        <span class="tx">联系方式　如有任何疑问，请联系：<a href="mailto:1578929129@qq.com">1578929129@qq.com</a></span>
       </div>
     </div>
 
-    <a class="btn" href="mailto:1578929129@qq.com">📨 联系我们</a>
+    <p class="note">维护期间站点将自动跳转至本页面，后台管理功能不受影响。本公告内容可能根据实际情况调整，请持续留意官方消息。</p>
 
-    <p class="footer">ご不便をおかけしております <span class="star">✦</span> 恢复后我们将第一时间通知</p>
+    <a class="btn" href="mailto:1578929129@qq.com">📨 联系运营团队</a>
+
+    <p class="footer">
+      给您带来不便我们深感歉意，感谢您的包容与理解。<br/>今后也请继续支持《星辰桑切片站》。<span class="star"> ✦</span>
+      <span class="sign">—— 星辰桑切片站 · 运营团队</span>
+    </p>
   </main>
 
   <script>
-    // 远景星点
     (function () {
       var stars = document.getElementById('stars');
       for (var i = 0; i < 40; i++) {
         var s = document.createElement('i');
         s.style.left = Math.random() * 100 + '%';
         s.style.top = Math.random() * 100 + '%';
-        s.style.animationDelay = (Math.random() * 3.5).toFixed(2) + 's';
+        s.style.animationDelay = (Math.random() * 3.6).toFixed(2) + 's';
         stars.appendChild(s);
       }
-      // 漂浮几何粒子
       var amb = document.getElementById('ambient');
       var glyphs = ['+', '✦', '◈', '+', '·'];
       for (var j = 0; j < 14; j++) {
