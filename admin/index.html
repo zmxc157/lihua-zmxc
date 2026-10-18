@@ -59,6 +59,7 @@
         <button class="nav-btn active" onclick="switchTab('slices')" data-tab="slices">📋 切片管理</button>
         <button class="nav-btn" onclick="switchTab('site')" data-tab="site">⚙️ 站点设置</button>
         <button class="nav-btn" onclick="switchTab('questionnaire')" data-tab="questionnaire">📝 问卷管理</button>
+        <button class="nav-btn" onclick="switchTab('maintenance')" data-tab="maintenance">🛠️ 维护模式</button>
         <button class="nav-btn" onclick="switchTab('account')" data-tab="account">🔑 账号设置</button>
         <button class="nav-btn" onclick="switchTab('files')" data-tab="files">🗂️ 文件管理</button>
         <button class="nav-btn" onclick="switchTab('deploy')" data-tab="deploy">🚀 部署设置</button>
@@ -171,6 +172,62 @@
           </div>
           <button class="btn-pink" onclick="saveSiteConfig()">💾 保存站点设置</button>
           <div id="site-msg" class="form-success" style="display:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 维护模式 -->
+    <section id="tab-maintenance" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">🛠️ 维护模式</h2>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <p class="deploy-tip">
+            🌸 开启后，<b>到达设置的开始时间</b>，所有访客访问首页 / 工具页都会<b>自动跳转</b>到下方「跳转目标链接」指向的维护页（<code>tool/maintenance.html</code>）。
+            维护页本身、后台与 <code>tool/</code> 目录不会跳转，可随时回来关闭。
+          </p>
+
+          <div class="form-group">
+            <label class="label" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" id="maint-enabled" style="width:auto" />
+              启用维护模式（到达开始时间后自动跳转）
+            </label>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="label">开始时间（到达后开始跳转）</label>
+              <input type="datetime-local" id="maint-start" class="input" />
+            </div>
+            <div class="form-group">
+              <label class="label">结束时间（留空 / 9999 长期有效）</label>
+              <input type="datetime-local" id="maint-end" class="input" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="label">跳转目标链接（维护页地址）</label>
+            <input type="text" id="maint-url" class="input" placeholder="tool/maintenance.html" />
+            <p class="form-tip">🌸 默认 <code>tool/maintenance.html</code>（仓库 <code>tool/</code> 目录已内置维护页）。可填相对路径或完整 https 链接。</p>
+          </div>
+
+          <div class="form-group">
+            <label class="label">联系邮箱（维护页展示，仅供参考）</label>
+            <input type="text" id="maint-email" class="input" placeholder="1578929129@qq.com" />
+          </div>
+
+          <div class="form-group">
+            <label class="label">维护提示语（维护页展示，仅供参考）</label>
+            <textarea id="maint-msg" class="input textarea" rows="3"></textarea>
+            <p class="form-tip">🌸 实际文案以静态维护页 <code>tool/maintenance.html</code> 为准（该页为静态页，无需改代码）。</p>
+          </div>
+
+          <div class="form-row" style="align-items:center;gap:12px">
+            <button class="btn-pink" onclick="saveMaintenanceConfig()">💾 保存维护设置</button>
+            <span id="maint-msg-tip" class="form-success" style="display:none"></span>
+          </div>
+          <p class="deploy-tip" style="margin-top:12px" id="maint-status"></p>
         </div>
       </div>
     </section>

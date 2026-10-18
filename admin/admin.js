@@ -110,6 +110,7 @@ async function renderAll() {
   renderCategories();
   renderSlicesTable();
   renderSiteConfig();
+  renderMaintenanceConfig();
   renderQuestionnaires();
   renderDeployConfig();
 }
@@ -377,6 +378,48 @@ async function saveSiteConfig() {
   if (res && res.github) toast('✅ 站点设置已同步到 GitHub');
 }
 
+/* ---- 维护模式设置 ---- */
+function renderMaintenanceConfig() {
+  var m = config.maintenance || {};
+  var e  = document.getElementById('maint-enabled');
+  var s  = document.getElementById('maint-start');
+  var en = document.getElementById('maint-end');
+  var u  = document.getElementById('maint-url');
+  var em = document.getElementById('maint-email');
+  var ms = document.getElementById('maint-msg');
+  var st = document.getElementById('maint-status');
+  if (e)  e.checked = !!m.enabled;
+  if (s)  s.value = (m.startTime || '').slice(0, 16);
+  if (en) en.value = (m.endTime || '').slice(0, 16);
+  if (u)  u.value = m.redirectUrl || 'tool/maintenance.html';
+  if (em) em.value = m.contactEmail || '1578929129@qq.com';
+  if (ms) ms.value = m.message || '';
+  if (st) {
+    if (m.enabled) {
+      st.textContent = '🟢 维护模式已启用，将于 ' + (m.startTime || '未设置') + ' 起自动跳转至 ' + (m.redirectUrl || 'tool/maintenance.html');
+    } else {
+      st.textContent = '⚪ 维护模式未启用（保存后也不会跳转）';
+    }
+  }
+}
+
+async function saveMaintenanceConfig() {
+  if (!config.maintenance) config.maintenance = {};
+  var m = config.maintenance;
+  m.enabled       = document.getElementById('maint-enabled').checked;
+  m.startTime     = document.getElementById('maint-start').value || '';
+  m.endTime       = document.getElementById('maint-end').value || '';
+  m.redirectUrl   = document.getElementById('maint-url').value.trim() || 'tool/maintenance.html';
+  m.contactEmail  = document.getElementById('maint-email').value.trim();
+  m.message       = document.getElementById('maint-msg').value.trim();
+  var res = await saveConfig();
+  renderMaintenanceConfig();
+  var tip = document.getElementById('maint-msg-tip');
+  tip.textContent = '✅ 维护设置已保存！' + (res && res.github ? ' 已同步到 GitHub' : '（仅本地）');
+  tip.style.display = 'block';
+  setTimeout(function () { tip.style.display = 'none'; }, 3000);
+}
+
 /* ---- 问卷 CRUD ---- */
 function openAddQuestionnaireModal() {
   document.getElementById('q-modal-title').textContent = '添加问卷';
@@ -526,6 +569,14 @@ function getDefaultConfig() {
     passwordHash: hashPassword('20090329'),
     categories: ['歌切', '整活', '未分类'],
     questionnaires: [],
+    maintenance: {
+      enabled: false,
+      startTime: '',
+      endTime: '',
+      redirectUrl: 'tool/maintenance.html',
+      contactEmail: '1578929129@qq.com',
+      message: '当前网站正在维护中，有任何疑问请联系 1578929129@qq.com。维护时间：10月20日 12:00 ~ 9999/12/31'
+    },
     github: {
       owner: 'zmxc157',
       repo: 'lihua-zmxc',

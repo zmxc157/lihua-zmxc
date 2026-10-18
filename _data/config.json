@@ -33,5 +33,13 @@
     "repo": "lihua-zmxc",
     "branch": "main",
     "tokenEncrypted": "{\"alg\":\"AES-256-GCM/PBKDF2-SHA256\",\"salt\":\"HIBbsQ9V20LEsb4sft54Fw==\",\"iv\":\"d+ItN7SVQ1WQ5+ER\",\"data\":\"BtUZUcoT7sko6o6FOkI75pS4POJiynb2L5Khxs36LMg0nUzzc3zdDdbDgSeJgeJf66T+/DrGhplthH/qPTrbEi6V21OoAk9Qo3yL45c1E3tmCDvEi+a5fmeS+kKgBUmsKlzYi2tLsiFl0+77Kg==\"}"
+  },
+  "maintenance": {
+    "enabled": true,
+    "startTime": "2026-10-20T12:00",
+    "endTime": "9999-12-31T23:59",
+    "redirectUrl": "tool/maintenance.html",
+    "contactEmail": "1578929129@qq.com",
+    "message": "当前网站正在维护中，有任何疑问请联系 1578929129@qq.com。维护时间：10月20日 12:00 ~ 9999/12/31"
   }
 }

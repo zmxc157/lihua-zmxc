@@ -3,6 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ===== 维护模式前置检查（与首页一致，避免从其他入口绕过） ===== -->
+  <script>
+  (function () {
+    document.documentElement.style.visibility = 'hidden';
+    var path = (location.pathname || '').replace(/\\/g, '/');
+    var SKIP = [/\/maintenance\.html$/i, /\/admin\//i, /\/tool\//i];
+    function shouldSkip() { return SKIP.some(function (r) { return r.test(path); }); }
+    function checkMaintenance(cfg) {
+      if (!cfg || !cfg.maintenance || !cfg.maintenance.enabled) return false;
+      if (shouldSkip()) return false;
+      var m = cfg.maintenance, now = Date.now();
+      var start = m.startTime ? new Date(m.startTime).getTime() : 0;
+      var end = m.endTime ? new Date(m.endTime).getTime() : Infinity;
+      if (isNaN(start) || now < start || now > end) return false;
+      var url = m.redirectUrl || 'tool/maintenance.html';
+      if (!/^(https?:)?\/\//i.test(url) && url.charAt(0) !== '/') {
+        url = location.pathname.replace(/[^/]*$/, '') + url;
+      }
+      location.replace(url);
+      return true;
+    }
+    function reveal() { document.documentElement.style.visibility = ''; }
+    try {
+      var raw = localStorage.getItem('zmxc_../_data/config.json');
+      if (raw && checkMaintenance(JSON.parse(raw))) return;
+    } catch (e) {}
+    fetch('_data/config.json?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (cfg) { if (cfg && checkMaintenance(cfg)) return; reveal(); })
+      .catch(reveal);
+  })();
+  </script>
+  <!-- ===== /维护模式检查 ===== -->
+
   <title>🔐 Token 加解密工具</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
