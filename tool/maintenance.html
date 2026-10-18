@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>维护更新说明 · 星辰桑切片站</title>
+  <title>メンテナンスのお知らせ · 星辰桑切片站</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='25,6 75,6 100,50 75,94 25,94 0,50' fill='%231e6fe0'/%3E%3C/svg%3E" />
 
   <!-- 与主站点一致的自定义字体（根目录 zt.ttf） -->
@@ -16,282 +16,322 @@
       font-display: swap;
     }
   </style>
-  <!-- 与主站点完全一致的网络字体 -->
+  <!-- 与主站点完全一致的网络字体（圆体，贴近 BA 的 Main 字体观感） -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700;800&family=Shippori+Mincho:wght@400;600;800&display=swap" rel="stylesheet" />
 
   <style>
+    /* ============ 蔚蓝档案（基沃托斯）官方配色，取自参考仓库 ============ */
     :root {
-      /* 蔚蓝档案（基沃托斯）官方配色 */
-      --ba-deep:   #06111f;
-      --ba-navy:   #0b1c33;
-      --ba-blue:   #1e6fe0;
-      --ba-sky:    #4db8ff;
-      --ba-cyan:   #8fe3ff;
-      --ba-slate:  #2D4663;   /* BA 选中标签板岩蓝 */
-      --ba-gold:   #FFE000;   /* BA 选中文字金 */
-      --ba-line:   rgba(77, 184, 255, 0.45);
-      --ba-text:   #e6f3ff;
-      --ba-sub:    #9cc2e6;
+      --ba-deep:    #06101c;
+      --ba-navy:    #0b1c33;
+      --ba-blue:    #1e6fe0;
+      --ba-sky:     #4db8ff;
+      --ba-cyan:    #48C8FA;     /* 参考：加载条内条 */
+      --ba-cyan2:   #31C8FF;
+      --ba-slate:   #133453;     /* 参考：profile-bar-deco */
+      --ba-slate2:  #243239;     /* 参考：底部条 */
+      --ba-slate3:  #466398;     /* 参考：导航/后退按钮 */
+      --ba-ink:     #284160;     /* 参考：正文文字 */
+      --ba-ink2:    #0F3252;
+      --ba-gold:    #FDEE5A;     /* 参考：标题黄线 / 等级字 */
+      --ba-gold2:   #F2CE02;
+      --ba-panel:   #EFEFED;     /* 参考：dialog 面板 */
+      --ba-panel2:  #F8FBFB;
+      --ba-line:    rgba(77,184,255,.5);
 
-      /* —— 与主站点 css/style.css 完全一致的字体栈 —— */
+      /* 与主站点 css/style.css 完全一致的字体栈 */
       --font-main: 'ZTCustom', 'Zen Maru Gothic', 'Noto Sans SC', system-ui, sans-serif;
       --font-jp:   'ZTCustom', 'Shippori Mincho', 'Noto Serif JP', serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { height: 100%; }
+    html, body { height: 100%; }
 
     body {
-      font-family: var(--font-main);   /* 默认字体与主站点一致 */
-      color: var(--ba-text);
+      font-family: var(--font-main);
+      color: var(--ba-ink);
       background:
-        radial-gradient(1200px 720px at 50% -12%, rgba(30, 111, 224, 0.32), transparent 60%),
-        radial-gradient(900px 640px at 88% 112%, rgba(77, 184, 255, 0.12), transparent 60%),
-        linear-gradient(165deg, var(--ba-navy) 0%, var(--ba-deep) 100%);
+        radial-gradient(1300px 760px at 50% -14%, rgba(30,111,224,.30), transparent 60%),
+        radial-gradient(900px 640px at 86% 116%, rgba(72,200,250,.12), transparent 60%),
+        linear-gradient(165deg, #0c2238 0%, var(--ba-deep) 100%);
       min-height: 100vh;
-      min-height: 100dvh;               /* 移动端动态视口高度，避开地址栏 */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
-      /* 顶部给固定导航留位 + 刘海屏安全区 */
+      min-height: 100dvh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
       padding:
-        max(env(safe-area-inset-top), 0px) 16px
-        max(env(safe-area-inset-bottom), 16px) 16px;
+        max(env(safe-area-inset-top), 0px) 14px
+        max(env(safe-area-inset-bottom), 14px) 14px;
     }
 
     /* 六边形蜂窝网格（基沃托斯标志性几何） */
-    .hexgrid {
+    .bg-hex {
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52' viewBox='0 0 52 52'%3E%3Cg fill='none' stroke='%234db8ff' stroke-width='1.2'%3E%3Cpath d='M47 26 L38 36 L16 36 L7 26 L16 16 L38 16 Z'/%3E%3Cpath d='M20 36 L11 46 L11 50 M32 36 L41 46 L41 50'/%3E%3C/g%3E%3C/svg%3E");
-      opacity: 0.07;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%2348C8FA' stroke-width='1.2'%3E%3Cpath d='M51 28 L41 39 L19 39 L9 28 L19 17 L41 17 Z'/%3E%3Cpath d='M23 39 L14 49 L14 53 M33 39 L42 49 L42 53'/%3E%3C/g%3E%3C/svg%3E");
+      opacity: .06;
     }
-
-    /* 远景星点 */
-    .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-    .stars i {
-      position: absolute; width: 2px; height: 2px;
-      background: #cfeaff; border-radius: 50%; opacity: .5;
-      box-shadow: 0 0 6px rgba(143, 227, 255, .8);
-      animation: twinkle 3.6s ease-in-out infinite;
+    .bg-stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .bg-stars i {
+      position: absolute; width: 2px; height: 2px; background: #cfeaff; border-radius: 50%;
+      box-shadow: 0 0 6px rgba(143,227,255,.8); animation: tw 3.6s ease-in-out infinite;
     }
-    @keyframes twinkle { 0%,100%{opacity:.2} 50%{opacity:.85} }
-
-    /* 漂浮几何粒子 */
-    .ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-    .ambient span {
-      position: absolute; color: rgba(143, 227, 255, .35);
-      font-size: 16px; animation: drift linear infinite;
-    }
+    @keyframes tw { 0%,100%{opacity:.2} 50%{opacity:.85} }
+    .bg-ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .bg-ambient span { position: absolute; color: rgba(143,227,255,.32); animation: drift linear infinite; }
     @keyframes drift {
-      0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
-      10%  { opacity: .5; }
-      90%  { opacity: .5; }
-      100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+      0%{transform: translateY(112vh) rotate(0); opacity:0}
+      10%{opacity:.5} 90%{opacity:.5}
+      100%{transform: translateY(-20vh) rotate(360deg); opacity:0}
     }
 
-    /* 顶部 LOGO 条（仿官方站点导航） */
-    .topbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 2;
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 20px;
-      padding-top: max(env(safe-area-inset-top), 14px);
-      background: linear-gradient(180deg, rgba(6,17,31,.85), rgba(6,17,31,0));
-    }
-    .topbar .mark {
-      width: 28px; height: 28px; flex: none;
-      clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
-      background: linear-gradient(135deg, var(--ba-sky), var(--ba-blue));
-      box-shadow: 0 0 14px rgba(77,184,255,.6);
-    }
-    .topbar .wm { font-weight: 800; letter-spacing: .14em; font-size: 15px; color: var(--ba-text); }
-    .topbar .wm small { display: block; font-weight: 500; letter-spacing: .3em; font-size: 9px; color: var(--ba-sub); margin-top: 2px; }
-
-    /* 主面板（军事学园风 · 边角框） */
-    .panel {
+    /* ===================== BA 对话框遮罩（参考 .custom-layer） ===================== */
+    .ba-overlay {
       position: relative; z-index: 1;
-      width: min(92vw, 560px);
-      max-height: calc(100dvh - 96px);
-      overflow-y: auto;
-      padding: clamp(30px, 6vw, 52px) clamp(20px, 5vw, 40px) clamp(26px, 5vw, 40px);
-      text-align: center;
-      background: linear-gradient(160deg, rgba(18,40,72,.86), rgba(9,20,40,.9));
-      border: 1px solid var(--ba-line);
+      width: min(94vw, 560px);
+      max-height: calc(100dvh - 48px);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* 对话框主体（参考 .custom-box：#EFEFED / border-radius:2vh / 阴影） */
+    .ba-dialog {
+      position: relative;
+      width: 100%;
+      max-height: calc(100dvh - 48px);
+      display: flex; flex-direction: column;
+      background: var(--ba-panel);
       border-radius: 18px;
-      box-shadow:
-        0 0 0 1px rgba(77,184,255,.10),
-        0 26px 80px rgba(0,0,0,.55),
-        0 0 56px rgba(30,111,224,.25);
-      backdrop-filter: blur(6px);
-      scrollbar-width: thin;
-      scrollbar-color: rgba(77,184,255,.4) transparent;
+      box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 0 2px rgba(70,99,152,.35);
+      overflow: hidden;
+      animation: pop .35s cubic-bezier(.2,.9,.3,1.2);
     }
-    .panel::-webkit-scrollbar { width: 6px; }
-    .panel::-webkit-scrollbar-thumb { background: rgba(77,184,255,.4); border-radius: 3px; }
+    @keyframes pop { from{transform: scale(.92); opacity:0} to{transform: scale(1); opacity:1} }
 
-    /* 四角边角框 */
-    .corner { position: absolute; width: 22px; height: 22px; border: 2px solid var(--ba-cyan); filter: drop-shadow(0 0 5px rgba(143,227,255,.7)); }
-    .corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
-    .corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 6px; }
-    .corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 6px; }
-    .corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 6px; }
+    /* 四角 BA 风装饰（参考 popup-deco-box.png） */
+    .deco { position: absolute; width: 26px; height: 26px; z-index: 3; pointer-events: none;
+            border: 3px solid var(--ba-slate3); filter: drop-shadow(0 0 4px rgba(70,99,152,.6)); }
+    .deco.tl { top: 6px; left: 6px;  border-right: none; border-bottom: none; border-top-left-radius: 8px; }
+    .deco.tr { top: 6px; right: 6px; border-left: none;  border-bottom: none; border-top-right-radius: 8px; }
+    .deco.bl { bottom: 6px; left: 6px;  border-right: none; border-top: none; border-bottom-left-radius: 8px; }
+    .deco.br { bottom: 6px; right: 6px; border-left: none;  border-top: none; border-bottom-right-radius: 8px; }
 
-    /* BA 标志性：斜切金标（板岩蓝底 + 金字，skew 平行四边形） */
-    .ribbon {
-      display: inline-block;
-      transform: skew(-9deg);
-      background: linear-gradient(135deg, var(--ba-slate), #1b2f4a);
-      color: var(--ba-gold);
-      padding: 6px 20px;
-      font-size: 13px; font-weight: 800; letter-spacing: .24em;
-      border-radius: 6px;
-      box-shadow: 0 6px 16px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,224,0,.25);
-      margin-bottom: 14px;
+    /* ===================== 标题栏（参考 .title-box + bar-blue-01） ===================== */
+    .ba-titlebar {
+      position: relative;
+      flex: none;
+      height: 58px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px;
+      background: linear-gradient(90deg, #16395f 0%, #2d6aa8 55%, #3f8fd0 100%);
+      box-shadow: 0 2px 6px rgba(0,0,0,.35);
     }
-    .ribbon > span { display: inline-block; transform: skew(9deg); }
-
-    /* SCHALE 风格徽记（六边形 + 不完整光环） */
-    .emblem { width: 84px; height: 84px; margin: 0 auto 14px; position: relative; display: grid; place-items: center; }
-    .emblem .hex {
-      width: 62px; height: 62px;
+    .ba-titlebar::after { /* 顶高光，模拟 bar-blue 质感 */
+      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 42%;
+      background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
+    }
+    .ba-mark {
+      width: 26px; height: 26px; flex: none;
       clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
-      background: linear-gradient(135deg, var(--ba-sky), var(--ba-blue));
-      display: grid; place-items: center; font-size: 28px;
-      box-shadow: 0 0 22px rgba(77,184,255,.5);
+      background: linear-gradient(135deg, #fff, var(--ba-gold));
+      box-shadow: 0 0 10px rgba(253,238,90,.6);
+      display: grid; place-items: center; font-size: 13px;
     }
-    .emblem .halo {
-      position: absolute; inset: 0; border-radius: 50%;
-      border: 3px solid transparent; border-top-color: var(--ba-cyan);
-      border-right-color: rgba(143,227,255,.4);
-      animation: spin 7s linear infinite;
-      box-shadow: 0 0 16px rgba(143,227,255,.3);
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    h1 {
+    .ba-title-wrap { flex: 1; min-width: 0; }
+    .ba-title {
       font-family: var(--font-main);
-      font-size: clamp(26px, 7vw, 36px); font-weight: 800; letter-spacing: .06em;
-      background: linear-gradient(135deg, #cdeeff 0%, #6fc0ff 52%, #1e6fe0 100%);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      text-shadow: 0 0 24px rgba(77,184,255,.45);
-      margin-bottom: 4px;
+      font-size: 17px; font-weight: 800; letter-spacing: .14em;
+      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.45);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .sub-en { font-size: 11px; letter-spacing: .42em; color: var(--ba-sky); margin-bottom: 16px; opacity: .8; }
+    .ba-title-deco { height: 4px; margin-top: 5px; width: 72px; background: var(--ba-gold);
+                      border-radius: 2px; box-shadow: 0 0 6px rgba(253,238,90,.7); }
+    .ba-close {
+      flex: none; width: 30px; height: 30px; border: none; cursor: pointer;
+      border-radius: 7px; background: rgba(255,255,255,.16); color: #fff;
+      font-size: 18px; line-height: 1; display: grid; place-items: center;
+      transition: background .15s ease;
+    }
+    .ba-close:hover { background: rgba(255,255,255,.32); }
 
-    .lead {
-      font-size: clamp(13px, 3.6vw, 14px); line-height: 1.85; color: var(--ba-sub);
-      margin: 0 auto; max-width: 420px;
+    /* ===================== 内容区 ===================== */
+    .ba-body {
+      padding: clamp(20px, 5vw, 30px) clamp(18px, 5vw, 32px) clamp(20px, 5vw, 28px);
+      overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: rgba(70,99,152,.5) transparent;
+    }
+    .ba-body::-webkit-scrollbar { width: 6px; }
+    .ba-body::-webkit-scrollbar-thumb { background: rgba(70,99,152,.5); border-radius: 3px; }
+
+    .ba-eyebrow { font-size: 10px; letter-spacing: .38em; color: var(--ba-slate3); font-weight: 700; text-align: center; }
+    .ba-greet {
+      text-align: center; margin: 10px 0 4px;
+      font-size: clamp(14px, 3.8vw, 16px); color: var(--ba-ink2); font-weight: 700;
+    }
+    .ba-greet .hl { color: var(--ba-blue); }
+    .ba-msg {
+      text-align: center; margin: 0 auto; max-width: 420px;
+      font-size: clamp(12.5px, 3.4vw, 13.5px); line-height: 1.85; color: #3a566f;
     }
 
-    .divider { height: 1px; margin: 20px auto; width: 72%; background: linear-gradient(to right, transparent, var(--ba-line), transparent); }
+    .ba-divider { height: 1px; margin: 18px auto; width: 80%;
+                  background: linear-gradient(to right, transparent, rgba(70,99,152,.5), transparent); }
 
-    /* 公告信息（■ 分节，官方公告体） */
-    .notice { text-align: left; max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; font-size: 15px; line-height: 1.7; }
-    .notice .item { display: flex; gap: 10px; align-items: flex-start; }
-    .notice .item .mk { color: var(--ba-sky); font-weight: 800; flex: none; }
-    .notice .item .tx { color: var(--ba-text); }
-    .notice .item .tx b { color: var(--ba-cyan); font-weight: 700; }
-    .notice a { color: var(--ba-cyan); text-decoration: none; font-weight: 700; border-bottom: 1px dashed rgba(143,227,255,.6); }
-    .notice a:hover { color: #fff; }
+    /* 信息行（参考 HUD 的资源条：图标 + 标签 + 数值） */
+    .ba-info { display: flex; flex-direction: column; gap: 12px; max-width: 440px; margin: 0 auto; }
+    .ba-row {
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(90deg, rgba(70,99,152,.10), rgba(70,99,152,0));
+      border-left: 3px solid var(--ba-cyan);
+      border-radius: 8px; padding: 11px 14px;
+    }
+    .ba-ico {
+      flex: none; width: 34px; height: 34px; border-radius: 8px;
+      display: grid; place-items: center; font-size: 17px;
+      background: linear-gradient(135deg, #eaf3fb, #d4e6f6); color: var(--ba-slate);
+      box-shadow: inset 0 0 0 1px rgba(70,99,152,.25);
+    }
+    .ba-label { flex: none; width: 64px; font-size: 13px; font-weight: 800; color: var(--ba-ink2); letter-spacing: .04em; }
+    .ba-value { flex: 1; font-size: 14px; color: var(--ba-ink); font-weight: 700; word-break: break-all; }
+    .ba-value b { color: var(--ba-blue); }
+    .ba-value a { color: var(--ba-blue); text-decoration: none; border-bottom: 1px dashed rgba(30,111,224,.6); font-weight: 800; }
+    .ba-value a:hover { color: #0d4fa0; }
 
-    .note { text-align: left; max-width: 440px; margin: 16px auto 0; font-size: 12.5px; line-height: 1.7; color: var(--ba-sub); }
-    .note::before { content: "※ "; color: var(--ba-gold); font-weight: 800; }
+    /* BA 加载条（参考：外框 #454c61ab + 内条 #48C8FA） */
+    .ba-bar-wrap { max-width: 440px; margin: 18px auto 0; }
+    .ba-bar {
+      width: 100%; height: 12px; border-radius: 8px 3px 8px 3px;
+      background: #454c61ab; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.3);
+    }
+    .ba-bar > i {
+      display: block; height: 100%; width: 64%;
+      background: linear-gradient(90deg, #31C8FF, #48C8FA);
+      border-radius: 8px 3px 8px 3px;
+      box-shadow: 0 0 10px rgba(72,200,250,.7);
+      animation: flow 2.4s ease-in-out infinite;
+    }
+    @keyframes flow { 0%,100%{width: 54%} 50%{width: 76%} }
+    .ba-bar-text { text-align: center; margin-top: 8px; font-size: 11px; letter-spacing: .28em;
+                   color: var(--ba-slate3); font-weight: 700; }
 
-    /* BA 风按钮（斜切高亮 + 金边悬浮） */
-    .btn {
-      display: inline-block; margin-top: 24px;
-      padding: 13px 34px; border: none; border-radius: 12px;
-      font-family: var(--font-main); font-size: 15px; font-weight: 700; letter-spacing: .06em;
-      color: #fff; cursor: pointer; text-decoration: none;
-      background: linear-gradient(135deg, var(--ba-blue), var(--ba-sky));
-      box-shadow: 0 8px 22px rgba(30,111,224,.45), inset 0 1px 0 rgba(255,255,255,.3);
+    /* ===================== 标志性斜切平行四边形按钮（参考 skew + 购买框） ===================== */
+    .ba-actions { display: flex; gap: 14px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+    .ba-btn {
+      position: relative; border: none; cursor: pointer; text-decoration: none;
+      padding: 13px 30px; min-width: 140px; text-align: center;
+      font-family: var(--font-main); font-size: 15px; font-weight: 800; letter-spacing: .04em;
+      transform: skew(-12deg); border-radius: 9px;
       transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
     }
-    .btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(30,111,224,.5), inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 2px rgba(255,224,0,.5); }
-    .btn:active { transform: translateY(0); }
+    .ba-btn > span { display: inline-block; transform: skew(12deg); }
+    .ba-btn:hover { filter: brightness(1.06); transform: skew(-12deg) translateY(-1px);
+                    box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+    .ba-btn:active { transform: skew(-12deg) translateY(0); }
 
-    .footer { margin-top: 22px; font-size: 13px; line-height: 1.7; color: var(--ba-sub); }
-    .footer .sign { margin-top: 8px; color: var(--ba-text); font-weight: 700; letter-spacing: .04em; }
-    .footer .star { color: var(--ba-gold); }
+    .ba-btn-blue {
+      background: linear-gradient(135deg, #2d6aa8, #4db8ff);
+      color: #fff;
+      box-shadow: 0 5px 14px rgba(30,111,224,.45), inset 0 1px 0 rgba(255,255,255,.35);
+    }
+    .ba-btn-blue:hover { box-shadow: 0 8px 18px rgba(30,111,224,.5), inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 2px rgba(253,238,90,.7); }
+    .ba-btn-gold {
+      background: linear-gradient(135deg, var(--ba-gold), #fff3a8);
+      color: var(--ba-ink2);
+      box-shadow: 0 5px 14px rgba(180,160,0,.4), inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .ba-btn-gold:hover { box-shadow: 0 8px 18px rgba(180,160,0,.45), inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 2px rgba(30,111,224,.6); }
 
-    /* ===== 双端适配 ===== */
+    .ba-foot {
+      text-align: center; margin-top: 16px; font-size: 11.5px; line-height: 1.7; color: #6a819a;
+    }
+    .ba-foot .sign { display: block; margin-top: 4px; color: var(--ba-ink2); font-weight: 700; }
+    .ba-foot .star { color: var(--ba-gold2); }
+
+    /* ===================== 双端适配 ===================== */
     @media (max-width: 480px) {
-      .topbar { padding: 12px 16px; padding-top: max(env(safe-area-inset-top), 12px); gap: 10px; }
-      .topbar .wm { font-size: 13px; }
-      .topbar .wm small { letter-spacing: .24em; }
-      .panel { width: 94vw; border-radius: 14px; }
-      .emblem { width: 72px; height: 72px; }
-      .emblem .hex { width: 54px; height: 54px; font-size: 24px; }
-      .notice { font-size: 14px; }
-      .lead { font-size: 13px; }
-      .footer { font-size: 12px; }
-      .btn { width: 100%; padding: 14px 20px; }   /* 移动端按钮通栏，易点 */
+      .ba-overlay { width: 94vw; }
+      .ba-title { font-size: 15px; letter-spacing: .1em; }
+      .ba-mark { width: 22px; height: 22px; font-size: 11px; }
+      .ba-row { padding: 9px 11px; gap: 9px; }
+      .ba-ico { width: 30px; height: 30px; font-size: 15px; }
+      .ba-label { width: 56px; font-size: 12px; }
+      .ba-value { font-size: 13px; }
+      .ba-actions { flex-direction: column; }
+      .ba-btn { width: 100%; min-width: 0; }
     }
     @media (max-width: 360px) {
-      .topbar .wm small { display: none; }
-      .ribbon { font-size: 12px; padding: 5px 16px; letter-spacing: .18em; }
+      .ba-titlebar { height: 52px; padding: 0 12px; gap: 8px; }
+      .ba-title { font-size: 13px; }
+      .ba-title-deco { width: 56px; }
     }
     @media (min-width: 1024px) {
-      .panel { width: min(90vw, 580px); }
+      .ba-overlay { width: min(90vw, 580px); }
     }
   </style>
 </head>
 <body>
-  <div class="hexgrid"></div>
-  <div class="stars" id="stars"></div>
-  <div class="ambient" id="ambient"></div>
+  <div class="bg-hex"></div>
+  <div class="bg-stars" id="stars"></div>
+  <div class="bg-ambient" id="ambient"></div>
 
-  <header class="topbar">
-    <span class="mark"></span>
-    <span class="wm">星辰桑切片站<small>XINGCHEN · SCHALE</small></span>
-  </header>
+  <!-- BA 游戏内对话框 -->
+  <div class="ba-overlay">
+    <div class="ba-dialog">
+      <span class="deco tl"></span><span class="deco tr"></span>
+      <span class="deco bl"></span><span class="deco br"></span>
 
-  <main class="panel">
-    <span class="corner tl"></span><span class="corner tr"></span>
-    <span class="corner bl"></span><span class="corner br"></span>
-
-    <div class="ribbon"><span>メンテナンス中</span></div>
-
-    <div class="emblem">
-      <span class="halo"></span>
-      <span class="hex">🔧</span>
-    </div>
-
-    <h1>维护更新说明</h1>
-    <p class="sub-en">WEBSITE MAINTENANCE NOTICE</p>
-
-    <p class="lead">欢迎连接【什亭之箱】，老师。<br/>为保证更好的网站体验，本站点计划进行维护更新。维护期间网站将暂时无法访问，由此给您带来的不便，敬请谅解。</p>
-
-    <div class="divider"></div>
-
-    <div class="notice">
-      <div class="item">
-        <span class="mk">■</span>
-        <span class="tx">维护时间　<b>2026年10月20日 12:00 起</b>（长期维护，恢复时间将另行通知）</span>
+      <!-- 标题栏 -->
+      <div class="ba-titlebar">
+        <span class="ba-mark">✦</span>
+        <div class="ba-title-wrap">
+          <div class="ba-title">メンテナンスのお知らせ</div>
+          <div class="ba-title-deco"></div>
+        </div>
+        <button class="ba-close" type="button" aria-label="关闭" onclick="history.length>1?history.back():location.href='../index.html'">×</button>
       </div>
-      <div class="item">
-        <span class="mk">■</span>
-        <span class="tx">联系方式　如有任何疑问，请联系：<a href="mailto:1578929129@qq.com">1578929129@qq.com</a></span>
+
+      <!-- 内容区 -->
+      <div class="ba-body">
+        <div class="ba-eyebrow">WEBSITE MAINTENANCE NOTICE</div>
+        <p class="ba-greet">欢迎连接【什亭之箱】，<span class="hl">老师</span>。</p>
+        <p class="ba-msg">为保证更好的网站体验，本站点将进行维护更新。维护期间网站暂时无法访问，由此给您带来的不便，我们深表歉意，敬请谅解。</p>
+
+        <div class="ba-divider"></div>
+
+        <div class="ba-info">
+          <div class="ba-row">
+            <span class="ba-ico">⏱</span>
+            <span class="ba-label">维护时间</span>
+            <span class="ba-value"><b>2026年10月20日 12:00</b> 起（长期维护，恢复时间将另行通知）</span>
+          </div>
+          <div class="ba-row">
+            <span class="ba-ico">✉</span>
+            <span class="ba-label">联系邮箱</span>
+            <span class="ba-value">如有疑问请联系：<a href="mailto:1578929129@qq.com">1578929129@qq.com</a></span>
+          </div>
+        </div>
+
+        <div class="ba-bar-wrap">
+          <div class="ba-bar"><i></i></div>
+          <p class="ba-bar-text">ただいまメンテナンス中です · SERVER MAINTENANCE</p>
+        </div>
+
+        <div class="ba-actions">
+          <button class="ba-btn ba-btn-blue" type="button" onclick="history.length>1?history.back():location.href='../index.html'"><span>了解 (OK)</span></button>
+          <a class="ba-btn ba-btn-gold" href="mailto:1578929129@qq.com"><span>📨 联系运营团队</span></a>
+        </div>
+
+        <p class="ba-foot">
+          给您带来不便我们深感歉意，感谢您的包容与理解。<br/>今后也请继续支持《星辰桑切片站》。<span class="star"> ✦</span>
+          <span class="sign">—— 星辰桑切片站 · 运营团队</span>
+        </p>
       </div>
     </div>
-
-    <p class="note">维护期间站点将自动跳转至本页面，后台管理功能不受影响。本公告内容可能根据实际情况调整，请持续留意官方消息。</p>
-
-    <a class="btn" href="mailto:1578929129@qq.com">📨 联系运营团队</a>
-
-    <p class="footer">
-      给您带来不便我们深感歉意，感谢您的包容与理解。<br/>今后也请继续支持《星辰桑切片站》。<span class="star"> ✦</span>
-      <span class="sign">—— 星辰桑切片站 · 运营团队</span>
-    </p>
-  </main>
+  </div>
 
   <script>
     (function () {
       var stars = document.getElementById('stars');
-      for (var i = 0; i < 40; i++) {
+      for (var i = 0; i < 38; i++) {
         var s = document.createElement('i');
         s.style.left = Math.random() * 100 + '%';
         s.style.top = Math.random() * 100 + '%';
@@ -299,7 +339,7 @@
         stars.appendChild(s);
       }
       var amb = document.getElementById('ambient');
-      var glyphs = ['+', '✦', '◈', '+', '·'];
+      var glyphs = ['+', '✦', '◈', '+', '·', '◇'];
       for (var j = 0; j < 14; j++) {
         var sp = document.createElement('span');
         sp.textContent = glyphs[j % glyphs.length];
