@@ -2,17 +2,23 @@
    蔚蓝档案（Blue Archive）鼠标指针 · 普通版
    来源：https://github.com/makipom/BlueArchive-Cursors （根目录普通版 .cur/.ani）
    说明：本文件放在仓库 assets/ 下，光标图片以本文件为基准相对引用
-   （cursors/normal.cur 等），因此无论哪个页面引入本 css 都能正确定位。
+         （cursors/normal.cur 等），因此无论哪个页面引入本 css 都能正确定位。
+
+   兼容要点：
+   · 自定义光标 url() 必须带 hotspot 坐标（Firefox 强制要求，否则整条
+     cursor 声明失效、回退为系统 pointer/auto）。故每条均写 "url(x.cur) X Y, fallbk"。
+   · 交互元素统一使用 BA 的 link.cur（而非系统 pointer），避免"放到按钮上变系统光标"。
+   · 使用 !important 确保覆盖各页面自带 cursor 覆盖，做到全站统一 BA 光标。
    ============================================================ */
 
-/* 全局默认光标：BA 普通指针 */
+/* 全局默认光标：BA 普通指针（箭头热点在尖端 4,4） */
 *,
 *::before,
 *::after {
-  cursor: url('cursors/normal.cur'), auto;
+  cursor: url('cursors/normal.cur') 4 4, auto !important;
 }
 
-/* 链接 / 按钮 / 各类可点击元素：BA 手型指针 */
+/* 链接 / 按钮 / 各类可点击元素：BA 手型指针（指尖热点 8,4） */
 a,
 button,
 [role="button"],
@@ -30,10 +36,19 @@ input[type="submit"],
 input[type="reset"],
 .selectable,
 .sortable {
-  cursor: url('cursors/link.cur'), pointer;
+  cursor: url('cursors/link.cur') 8 4, pointer !important;
 }
 
-/* 文本输入区：BA 文本（动画）光标 */
+/* 按下/激活态同样保持 BA 手型（避免点击瞬间闪回系统光标） */
+a:active,
+button:active,
+[role="button"]:active,
+.btn:active,
+.clickable:active {
+  cursor: url('cursors/link.cur') 8 4, pointer !important;
+}
+
+/* 文本输入区：BA 文本（动画）光标（I 形热点 8,8） */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -47,49 +62,49 @@ textarea,
 [contenteditable="true"],
 [contenteditable=""],
 .editable {
-  cursor: url('cursors/text.ani'), text;
+  cursor: url('cursors/text.ani') 8 8, text !important;
 }
 
 /* 帮助 */
 abbr[title],
 .help,
 [data-help] {
-  cursor: url('cursors/help.cur'), help;
+  cursor: url('cursors/help.cur') 4 4, help !important;
 }
 
-/* 可拖拽移动 */
+/* 可拖拽移动（四向箭头中心热点 12,12） */
 [draggable="true"],
 .draggable {
-  cursor: url('cursors/move.cur'), move;
+  cursor: url('cursors/move.cur') 12 12, move !important;
 }
 
-/* 等待 / 加载中 */
+/* 等待 / 加载中（旋转沙漏中心热点 12,12） */
 .wait,
 .loading,
 [aria-busy="true"],
 button:disabled,
 .disabled,
 .btn:disabled {
-  cursor: url('cursors/background.ani'), progress;
+  cursor: url('cursors/background.ani') 12 12, progress !important;
 }
 
-/* 禁止 */
+/* 禁止（圆圈斜杠中心热点 12,12） */
 .not-allowed,
 [disabled] {
-  cursor: url('cursors/block.cur'), not-allowed;
+  cursor: url('cursors/block.cur') 12 12, not-allowed !important;
 }
 
-/* 区域选择 */
+/* 区域选择（单元格十字中心热点 12,12） */
 .areaselect {
-  cursor: url('cursors/areaselect.cur'), cell;
+  cursor: url('cursors/areaselect.cur') 12 12, cell !important;
 }
 
 /* 备选选择 */
 .alternativeselect {
-  cursor: url('cursors/alternativeselect.cur'), col-resize;
+  cursor: url('cursors/alternativeselect.cur') 12 12, col-resize !important;
 }
 
-/* 调节尺寸 */
+/* 调节尺寸（对角箭头尖热点 0,0 / 上下 12,12 / 左右 12,12） */
 .resize,
 .resizer,
 .resize-n,
@@ -100,11 +115,19 @@ button:disabled,
 .resize-nw,
 .resize-se,
 .resize-sw {
-  cursor: url('cursors/resizeDIAG1.cur'), nwse-resize;
+  cursor: url('cursors/resizeDIAG1.cur') 0 0, nwse-resize !important;
+}
+.resize-n,
+.resize-s {
+  cursor: url('cursors/resizeNS.cur') 12 12, ns-resize !important;
+}
+.resize-e,
+.resize-w {
+  cursor: url('cursors/resizeWE.cur') 12 12, ew-resize !important;
 }
 
-/* 画笔 / 编辑 */
+/* 画笔 / 编辑（笔尖热点 0,0） */
 .pen,
 .pen-mode {
-  cursor: url('cursors/pen.cur'), crosshair;
+  cursor: url('cursors/pen.cur') 0 0, crosshair !important;
 }

@@ -1,5 +1,5 @@
 /* ============================================================
-   蔚蓝档案（Blue Archive）点击特效 · 忠实复刻 FX_Touch
+   蔚蓝档案（Blue Archive）点击 / 滑动特效 · 忠实复刻 FX_Touch
    参考仓库：https://github.com/CialloKing/ba-click-fx
    本实现所有数值/配色严格取自参考仓库 src/config.js 的 UNITY_FX_TOUCH，
    仅将 Unity 粒子参数换算为 CSS 像素并按画面高度缩放（与参考一致）。
@@ -10,6 +10,9 @@
      · disk    中心圆盘闪光        (lifetime 200ms, r≈64.8)
      · rings   2 圈青色扩散环(带旋转溶解) (lifetime 600ms, 青 #4ca7ff, HDR 发光)
      · shards  4 片三角碎片 + 拖尾  (lifetime 600~700ms, 青/白渐变, 三角 #Triangle_02_1)
+
+   滑动 / 拖尾轨迹（对应官方 pointermove / touchmove 绑定的 trail 效果）：
+     · trail   沿移动路径连续喷出的 BA 蓝色发光粒子（按下拖动 / 触摸上下滑 / 滚轮滚动）
 
    纯原生 JS / Canvas2D，无依赖；全站只挂一个覆盖层；
    空闲自动停 rAF 省电；尊重 prefers-reduced-motion。
@@ -93,8 +96,12 @@
     canvas.height = Math.floor(window.innerHeight * dpr);
   }
 
-  /* ============ 生成一次特效（严格按 UNITY_FX_TOUCH） ============ */
-  function spawn(x, y) {
+  function kick() {
+    if (!running) { running = true; lastTs = now(); requestAnimationFrame(frame); }
+  }
+
+  /* ============ 一次点击爆发（严格按 UNITY_FX_TOUCH） ============ */
+  function spawnBurst(x, y) {
     var t0 = now();
 
     // hit：中心极短白闪
@@ -133,8 +140,35 @@
         trail: [], trailR: 0.15 * SHARD_U2RPX * S
       });
     }
+    kick();
+  }
 
-    if (!running) { running = true; lastTs = now(); requestAnimationFrame(frame); }
+  /* ============ 沿路径的滑动/拖尾粒子（轻量 BA 蓝点） ============ */
+  function spawnTrail(x, y, dirx, diry) {
+    var t0 = now();
+    var cnt = 2;
+    for (var i = 0; i < cnt; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var sp = (0.04 + Math.random() * 0.06) * SHARD_U2RPX * S;
+      // 跟随移动方向带一点初速，形成拖尾方向感
+      var vx = Math.cos(a) * sp + (dirx || 0) * 0.5;
+      var vy = Math.sin(a) * sp + (diry || 0) * 0.5;
+      parts.push({
+        k: 'trail', x: x + (Math.random() - 0.5) * 6 * S, y: y + (Math.random() - 0.5) * 6 * S,
+        vx: vx, vy: vy, born: t0, life: 320 + Math.random() * 160,
+        r: (2.2 + Math.random() * 2.6) * S
+      });
+    }
+    kick();
+  }
+
+  function pointOf(e) {
+    var x, y;
+    if (e.touches && e.touches.length) { x = e.touches[0].clientX; y = e.touches[0].clientY; }
+    else if (e.changedTouches && e.changedTouches.length) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; }
+    else { x = e.clientX; y = e.clientY; }
+    if (typeof x !== 'number' || isNaN(x)) return null;
+    return { x: x, y: y };
   }
 
   /* ============ 渲染循环 ============ */
@@ -224,6 +258,17 @@
         ctx.shadowBlur = 9 * S * shA;
         drawTri(px, py, p.size * (0.35 + 0.65 * (1 - t)), p.rot + p.vr * age, ctx);
         ctx.shadowBlur = 0;
+
+      } else if (p.k === 'trail') {
+        var tr = (1 - t);
+        var tx = p.x + p.vx * (now() - p.born) / 1000 * 0.6;
+        var ty = p.y + p.vy * (now() - p.born) / 1000 * 0.6;
+        var col = mix(C_SHARD, C_LBLUE, t);
+        ctx.fillStyle = rgba(col, tr * 0.9);
+        ctx.shadowColor = rgba(C_SHARD, tr * 0.9);
+        ctx.shadowBlur = 8 * S * tr;
+        ctx.beginPath(); ctx.arc(tx, ty, p.r * (0.4 + 0.6 * (1 - t)), 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
       }
       alive.push(p);
     }
@@ -250,27 +295,77 @@
   }
 
   /* ============ 事件 ============ */
+  var pressed = false;
+  var lastTrail = null;     // 上一次喷拖尾的位置（用于按距离节流）
+  var lastWheel = 0;
+
+  function maybeTrail(x, y, dx, dy) {
+    if (lastTrail) {
+      var d = Math.hypot(x - lastTrail.x, y - lastTrail.y);
+      if (d < 14 * S) return;     // 移动不够远，跳过，避免粒子堆叠
+    }
+    lastTrail = { x: x, y: y };
+    spawnTrail(x, y, dx, dy);
+  }
+
   function onDown(e) {
     if (reduceMotion) return;
     if (!canvas) ensureCanvas();
-    var x, y;
-    if (e.touches && e.touches.length) { x = e.touches[0].clientX; y = e.touches[0].clientY; }
-    else if (e.changedTouches && e.changedTouches.length) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; }
-    else { x = e.clientX; y = e.clientY; }
-    if (typeof x !== 'number' || isNaN(x)) return;
-    spawn(x, y);
+    var pt = pointOf(e); if (!pt) return;
+    pressed = true;
+    spawnBurst(pt.x, pt.y);
   }
+  function onMove(e) {
+    if (reduceMotion) return;
+    if (!canvas) ensureCanvas();
+    var pt = pointOf(e); if (!pt) return;
+    // 仅当「触摸滑动」或「鼠标/笔按住拖动」时出拖尾；普通 hover 保持安静
+    var isTouch = e.pointerType === 'touch';
+    var dragging = isTouch || (typeof e.buttons === 'number' && e.buttons > 0);
+    if (!dragging) { lastTrail = null; return; }
+    var dx = 0, dy = 0;
+    if (e.movementX || e.movementY) { dx = e.movementX; dy = e.movementY; }
+    maybeTrail(pt.x, pt.y, dx, dy);
+  }
+  function onUp() { pressed = false; lastTrail = null; }
+  function onWheel(e) {
+    if (reduceMotion) return;
+    if (!canvas) ensureCanvas();
+    var t = Date.now();
+    if (t - lastWheel < 70) return;   // 节流：滚轮高频触发
+    lastWheel = t;
+    maybeTrail(e.clientX, e.clientY, 0, e.deltaY < 0 ? -1 : 1);
+  }
+
   function init() {
     if (reduceMotion) return;
-    document.addEventListener('pointerdown', onDown, { passive: true });
-    if (!window.PointerEvent) {
+    scale();
+    if (window.PointerEvent) {
+      document.addEventListener('pointerdown', onDown, { passive: true });
+      document.addEventListener('pointermove', onMove, { passive: true });
+      document.addEventListener('pointerup', onUp, { passive: true });
+      document.addEventListener('pointercancel', onUp, { passive: true });
+    } else {
+      // 旧浏览器降级
       document.addEventListener('mousedown', onDown, { passive: true });
+      document.addEventListener('mousemove', function (e) {
+        if (e.buttons > 0) onMove(e); else { lastTrail = null; }
+      }, { passive: true });
+      document.addEventListener('mouseup', onUp, { passive: true });
       document.addEventListener('touchstart', onDown, { passive: true });
+      document.addEventListener('touchmove', function (e) {
+        if (e.touches && e.touches.length) {
+          var t = e.touches[0];
+          maybeTrail(t.clientX, t.clientY, 0, 0);
+        }
+      }, { passive: true });   // passive：绝不阻止页面滚动（手机上下滑）
+      document.addEventListener('touchend', onUp, { passive: true });
     }
+    // 桌面鼠标滚轮（上下滚动）反馈
+    document.addEventListener('wheel', onWheel, { passive: true });
     window.addEventListener('beforeunload', function () {
       if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
     });
-    scale();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
