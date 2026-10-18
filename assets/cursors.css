@@ -1,0 +1,110 @@
+/* ============================================================
+   蔚蓝档案（Blue Archive）鼠标指针 · 普通版
+   来源：https://github.com/makipom/BlueArchive-Cursors （根目录普通版 .cur/.ani）
+   说明：本文件放在仓库 assets/ 下，光标图片以本文件为基准相对引用
+   （cursors/normal.cur 等），因此无论哪个页面引入本 css 都能正确定位。
+   ============================================================ */
+
+/* 全局默认光标：BA 普通指针 */
+*,
+*::before,
+*::after {
+  cursor: url('cursors/normal.cur'), auto;
+}
+
+/* 链接 / 按钮 / 各类可点击元素：BA 手型指针 */
+a,
+button,
+[role="button"],
+.btn,
+.btn-pink,
+.btn-blue,
+.nav-btn,
+.tab-btn,
+.clickable,
+summary,
+label[for],
+[onclick],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.selectable,
+.sortable {
+  cursor: url('cursors/link.cur'), pointer;
+}
+
+/* 文本输入区：BA 文本（动画）光标 */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+input[type="tel"],
+input[type="date"],
+input[type="datetime-local"],
+textarea,
+[contenteditable="true"],
+[contenteditable=""],
+.editable {
+  cursor: url('cursors/text.ani'), text;
+}
+
+/* 帮助 */
+abbr[title],
+.help,
+[data-help] {
+  cursor: url('cursors/help.cur'), help;
+}
+
+/* 可拖拽移动 */
+[draggable="true"],
+.draggable {
+  cursor: url('cursors/move.cur'), move;
+}
+
+/* 等待 / 加载中 */
+.wait,
+.loading,
+[aria-busy="true"],
+button:disabled,
+.disabled,
+.btn:disabled {
+  cursor: url('cursors/background.ani'), progress;
+}
+
+/* 禁止 */
+.not-allowed,
+[disabled] {
+  cursor: url('cursors/block.cur'), not-allowed;
+}
+
+/* 区域选择 */
+.areaselect {
+  cursor: url('cursors/areaselect.cur'), cell;
+}
+
+/* 备选选择 */
+.alternativeselect {
+  cursor: url('cursors/alternativeselect.cur'), col-resize;
+}
+
+/* 调节尺寸 */
+.resize,
+.resizer,
+.resize-n,
+.resize-s,
+.resize-e,
+.resize-w,
+.resize-ne,
+.resize-nw,
+.resize-se,
+.resize-sw {
+  cursor: url('cursors/resizeDIAG1.cur'), nwse-resize;
+}
+
+/* 画笔 / 编辑 */
+.pen,
+.pen-mode {
+  cursor: url('cursors/pen.cur'), crosshair;
+}
