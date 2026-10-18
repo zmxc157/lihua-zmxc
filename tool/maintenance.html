@@ -2,10 +2,25 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>维护更新说明 · 星辰桑切片站</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='25,6 75,6 100,50 75,94 25,94 0,50' fill='%231e6fe0'/%3E%3C/svg%3E" />
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- 与主站点一致的自定义字体（根目录 zt.ttf） -->
+  <style>
+    @font-face {
+      font-family: 'ZTCustom';
+      src: url('../zt.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+  </style>
+  <!-- 与主站点完全一致的网络字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700;800&family=Shippori+Mincho:wght@400;600;800&display=swap" rel="stylesheet" />
+
   <style>
     :root {
       /* 蔚蓝档案（基沃托斯）官方配色 */
@@ -14,29 +29,38 @@
       --ba-blue:   #1e6fe0;
       --ba-sky:    #4db8ff;
       --ba-cyan:   #8fe3ff;
+      --ba-slate:  #2D4663;   /* BA 选中标签板岩蓝 */
+      --ba-gold:   #FFE000;   /* BA 选中文字金 */
       --ba-line:   rgba(77, 184, 255, 0.45);
       --ba-text:   #e6f3ff;
       --ba-sub:    #9cc2e6;
-      --ba-gold:   #ffd56b;
+
+      /* —— 与主站点 css/style.css 完全一致的字体栈 —— */
+      --font-main: 'ZTCustom', 'Zen Maru Gothic', 'Noto Sans SC', system-ui, sans-serif;
+      --font-jp:   'ZTCustom', 'Shippori Mincho', 'Noto Serif JP', serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; }
+    html { height: 100%; }
 
     body {
-      font-family: "M PLUS Rounded 1c", "Zen Maru Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: var(--font-main);   /* 默认字体与主站点一致 */
       color: var(--ba-text);
       background:
         radial-gradient(1200px 720px at 50% -12%, rgba(30, 111, 224, 0.32), transparent 60%),
         radial-gradient(900px 640px at 88% 112%, rgba(77, 184, 255, 0.12), transparent 60%),
         linear-gradient(165deg, var(--ba-navy) 0%, var(--ba-deep) 100%);
-      min-height: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;               /* 移动端动态视口高度，避开地址栏 */
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       position: relative;
-      padding: 24px;
+      /* 顶部给固定导航留位 + 刘海屏安全区 */
+      padding:
+        max(env(safe-area-inset-top), 0px) 16px
+        max(env(safe-area-inset-bottom), 16px) 16px;
     }
 
     /* 六边形蜂窝网格（基沃托斯标志性几何） */
@@ -73,30 +97,26 @@
     .topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 2;
       display: flex; align-items: center; gap: 12px;
-      padding: 16px 24px;
+      padding: 14px 20px;
+      padding-top: max(env(safe-area-inset-top), 14px);
       background: linear-gradient(180deg, rgba(6,17,31,.85), rgba(6,17,31,0));
     }
     .topbar .mark {
-      width: 30px; height: 30px;
+      width: 28px; height: 28px; flex: none;
       clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
       background: linear-gradient(135deg, var(--ba-sky), var(--ba-blue));
       box-shadow: 0 0 14px rgba(77,184,255,.6);
-      flex: none;
     }
-    .topbar .wm {
-      font-weight: 800; letter-spacing: .14em; font-size: 15px;
-      color: var(--ba-text);
-    }
-    .topbar .wm small {
-      display: block; font-weight: 500; letter-spacing: .3em;
-      font-size: 9px; color: var(--ba-sub); margin-top: 2px;
-    }
+    .topbar .wm { font-weight: 800; letter-spacing: .14em; font-size: 15px; color: var(--ba-text); }
+    .topbar .wm small { display: block; font-weight: 500; letter-spacing: .3em; font-size: 9px; color: var(--ba-sub); margin-top: 2px; }
 
     /* 主面板（军事学园风 · 边角框） */
     .panel {
       position: relative; z-index: 1;
-      width: min(94vw, 560px);
-      padding: 52px 40px 40px;
+      width: min(92vw, 560px);
+      max-height: calc(100dvh - 96px);
+      overflow-y: auto;
+      padding: clamp(30px, 6vw, 52px) clamp(20px, 5vw, 40px) clamp(26px, 5vw, 40px);
       text-align: center;
       background: linear-gradient(160deg, rgba(18,40,72,.86), rgba(9,20,40,.9));
       border: 1px solid var(--ba-line);
@@ -106,7 +126,12 @@
         0 26px 80px rgba(0,0,0,.55),
         0 0 56px rgba(30,111,224,.25);
       backdrop-filter: blur(6px);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(77,184,255,.4) transparent;
     }
+    .panel::-webkit-scrollbar { width: 6px; }
+    .panel::-webkit-scrollbar-thumb { background: rgba(77,184,255,.4); border-radius: 3px; }
+
     /* 四角边角框 */
     .corner { position: absolute; width: 22px; height: 22px; border: 2px solid var(--ba-cyan); filter: drop-shadow(0 0 5px rgba(143,227,255,.7)); }
     .corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
@@ -114,96 +139,104 @@
     .corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 6px; }
     .corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 6px; }
 
-    /* SCHALE 风格徽记（六边形 + 不完整光环） */
-    .emblem {
-      width: 88px; height: 88px; margin: 0 auto 16px;
-      position: relative; display: grid; place-items: center;
+    /* BA 标志性：斜切金标（板岩蓝底 + 金字，skew 平行四边形） */
+    .ribbon {
+      display: inline-block;
+      transform: skew(-9deg);
+      background: linear-gradient(135deg, var(--ba-slate), #1b2f4a);
+      color: var(--ba-gold);
+      padding: 6px 20px;
+      font-size: 13px; font-weight: 800; letter-spacing: .24em;
+      border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,224,0,.25);
+      margin-bottom: 14px;
     }
+    .ribbon > span { display: inline-block; transform: skew(9deg); }
+
+    /* SCHALE 风格徽记（六边形 + 不完整光环） */
+    .emblem { width: 84px; height: 84px; margin: 0 auto 14px; position: relative; display: grid; place-items: center; }
     .emblem .hex {
-      width: 64px; height: 64px;
+      width: 62px; height: 62px;
       clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
       background: linear-gradient(135deg, var(--ba-sky), var(--ba-blue));
-      display: grid; place-items: center;
-      font-size: 30px;
+      display: grid; place-items: center; font-size: 28px;
       box-shadow: 0 0 22px rgba(77,184,255,.5);
     }
     .emblem .halo {
       position: absolute; inset: 0; border-radius: 50%;
-      border: 3px solid transparent;
-      border-top-color: var(--ba-cyan);
+      border: 3px solid transparent; border-top-color: var(--ba-cyan);
       border-right-color: rgba(143,227,255,.4);
       animation: spin 7s linear infinite;
       box-shadow: 0 0 16px rgba(143,227,255,.3);
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .tag {
-      font-size: 12px; letter-spacing: .26em; color: var(--ba-sub);
-      margin-bottom: 8px;
-    }
-
     h1 {
-      font-size: 36px; font-weight: 800; letter-spacing: .06em;
+      font-family: var(--font-main);
+      font-size: clamp(26px, 7vw, 36px); font-weight: 800; letter-spacing: .06em;
       background: linear-gradient(135deg, #cdeeff 0%, #6fc0ff 52%, #1e6fe0 100%);
       -webkit-background-clip: text; background-clip: text; color: transparent;
       text-shadow: 0 0 24px rgba(77,184,255,.45);
       margin-bottom: 4px;
     }
-    .sub-en {
-      font-size: 11px; letter-spacing: .42em; color: var(--ba-sky);
-      margin-bottom: 18px; opacity: .8;
-    }
+    .sub-en { font-size: 11px; letter-spacing: .42em; color: var(--ba-sky); margin-bottom: 16px; opacity: .8; }
 
     .lead {
-      font-size: 14px; line-height: 1.85; color: var(--ba-sub);
-      margin: 0 auto 6px; max-width: 420px;
+      font-size: clamp(13px, 3.6vw, 14px); line-height: 1.85; color: var(--ba-sub);
+      margin: 0 auto; max-width: 420px;
     }
 
-    .divider {
-      height: 1px; margin: 22px auto; width: 72%;
-      background: linear-gradient(to right, transparent, var(--ba-line), transparent);
-    }
+    .divider { height: 1px; margin: 20px auto; width: 72%; background: linear-gradient(to right, transparent, var(--ba-line), transparent); }
 
     /* 公告信息（■ 分节，官方公告体） */
-    .notice {
-      text-align: left; max-width: 440px; margin: 0 auto;
-      display: flex; flex-direction: column; gap: 14px;
-      font-size: 15px; line-height: 1.7;
-    }
+    .notice { text-align: left; max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; font-size: 15px; line-height: 1.7; }
     .notice .item { display: flex; gap: 10px; align-items: flex-start; }
     .notice .item .mk { color: var(--ba-sky); font-weight: 800; flex: none; }
     .notice .item .tx { color: var(--ba-text); }
     .notice .item .tx b { color: var(--ba-cyan); font-weight: 700; }
-    .notice a {
-      color: var(--ba-cyan); text-decoration: none; font-weight: 700;
-      border-bottom: 1px dashed rgba(143,227,255,.6);
-    }
+    .notice a { color: var(--ba-cyan); text-decoration: none; font-weight: 700; border-bottom: 1px dashed rgba(143,227,255,.6); }
     .notice a:hover { color: #fff; }
 
-    .note {
-      text-align: left; max-width: 440px; margin: 16px auto 0;
-      font-size: 12.5px; line-height: 1.7; color: var(--ba-sub);
-    }
+    .note { text-align: left; max-width: 440px; margin: 16px auto 0; font-size: 12.5px; line-height: 1.7; color: var(--ba-sub); }
     .note::before { content: "※ "; color: var(--ba-gold); font-weight: 800; }
 
-    /* BA 风按钮 */
+    /* BA 风按钮（斜切高亮 + 金边悬浮） */
     .btn {
-      display: inline-block; margin-top: 26px;
-      padding: 12px 32px; border: none; border-radius: 12px;
-      font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .06em;
+      display: inline-block; margin-top: 24px;
+      padding: 13px 34px; border: none; border-radius: 12px;
+      font-family: var(--font-main); font-size: 15px; font-weight: 700; letter-spacing: .06em;
       color: #fff; cursor: pointer; text-decoration: none;
       background: linear-gradient(135deg, var(--ba-blue), var(--ba-sky));
       box-shadow: 0 8px 22px rgba(30,111,224,.45), inset 0 1px 0 rgba(255,255,255,.3);
-      transition: transform .15s ease, filter .15s ease;
+      transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
     }
-    .btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(30,111,224,.5), inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 2px rgba(255,224,0,.5); }
     .btn:active { transform: translateY(0); }
 
-    .footer {
-      margin-top: 24px; font-size: 13px; line-height: 1.7; color: var(--ba-sub);
-    }
+    .footer { margin-top: 22px; font-size: 13px; line-height: 1.7; color: var(--ba-sub); }
     .footer .sign { margin-top: 8px; color: var(--ba-text); font-weight: 700; letter-spacing: .04em; }
     .footer .star { color: var(--ba-gold); }
+
+    /* ===== 双端适配 ===== */
+    @media (max-width: 480px) {
+      .topbar { padding: 12px 16px; padding-top: max(env(safe-area-inset-top), 12px); gap: 10px; }
+      .topbar .wm { font-size: 13px; }
+      .topbar .wm small { letter-spacing: .24em; }
+      .panel { width: 94vw; border-radius: 14px; }
+      .emblem { width: 72px; height: 72px; }
+      .emblem .hex { width: 54px; height: 54px; font-size: 24px; }
+      .notice { font-size: 14px; }
+      .lead { font-size: 13px; }
+      .footer { font-size: 12px; }
+      .btn { width: 100%; padding: 14px 20px; }   /* 移动端按钮通栏，易点 */
+    }
+    @media (max-width: 360px) {
+      .topbar .wm small { display: none; }
+      .ribbon { font-size: 12px; padding: 5px 16px; letter-spacing: .18em; }
+    }
+    @media (min-width: 1024px) {
+      .panel { width: min(90vw, 580px); }
+    }
   </style>
 </head>
 <body>
@@ -220,12 +253,13 @@
     <span class="corner tl"></span><span class="corner tr"></span>
     <span class="corner bl"></span><span class="corner br"></span>
 
+    <div class="ribbon"><span>メンテナンス中</span></div>
+
     <div class="emblem">
       <span class="halo"></span>
       <span class="hex">🔧</span>
     </div>
 
-    <p class="tag">ただいまメンテナンス中です</p>
     <h1>维护更新说明</h1>
     <p class="sub-en">WEBSITE MAINTENANCE NOTICE</p>
 

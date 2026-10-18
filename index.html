@@ -4,50 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ===== 维护模式前置检查：到点自动跳转维护页（避免首页内容闪现） ===== -->
+  <!-- ===== 维护模式前置检查：按用户本机时间判断，未到时间正常访问原网页，到点才自动跳转维护页 ===== -->
   <script>
   (function () {
-    // 先隐藏文档，防止维护期首页内容闪现
-    document.documentElement.style.visibility = 'hidden';
-
-    // 维护页本身 / 后台 / tool 目录 不触发跳转，避免死循环
     var path = (location.pathname || '').replace(/\\/g, '/');
+    // 维护页本身 / 后台 / tool 目录 不触发跳转，避免死循环
     var SKIP = [/\/maintenance\.html$/i, /\/admin\//i, /\/tool\//i];
     function shouldSkip() { return SKIP.some(function (r) { return r.test(path); }); }
 
-    function checkMaintenance(cfg) {
-      if (!cfg || !cfg.maintenance || !cfg.maintenance.enabled) return false;
-      if (shouldSkip()) return false;
-      var m = cfg.maintenance;
-      var now = Date.now();
+    // 依据配置 + 用户本机时间判断当前是否处于维护窗口，返回跳转地址或 null
+    function getRedirectUrl(cfg) {
+      if (!cfg || !cfg.maintenance || !cfg.maintenance.enabled) return null;
+      if (shouldSkip()) return null;
+      var m = cfg.maintenance, now = Date.now();
       var start = m.startTime ? new Date(m.startTime).getTime() : 0;
       var end = m.endTime ? new Date(m.endTime).getTime() : Infinity;
-      if (isNaN(start) || now < start) return false;       // 未到开始时间
-      if (now > end) return false;                          // 已过结束时间
+      if (isNaN(start) || now < start || now > end) return null; // 未到开始 / 已过结束
       var url = m.redirectUrl || 'tool/maintenance.html';
-      // 相对路径统一以站点根目录为基准
       if (!/^(https?:)?\/\//i.test(url) && url.charAt(0) !== '/') {
         url = location.pathname.replace(/[^/]*$/, '') + url;
       }
-      location.replace(url);
-      return true;
+      return url;
     }
-    function reveal() { document.documentElement.style.visibility = ''; }
 
-    // 1) 先看本地缓存（管理员刚保存后立即生效，无需等待请求）
+    function redirect(url) { location.replace(url); }
+
+    // 1) 本地缓存即时判定（管理员刚保存后立即可见，无需等待 CDN 生效）
     try {
       var raw = localStorage.getItem('zmxc_../_data/config.json');
-      if (raw && checkMaintenance(JSON.parse(raw))) return;
+      if (raw) { var u = getRedirectUrl(JSON.parse(raw)); if (u) { redirect(u); return; } }
     } catch (e) {}
 
-    // 2) 再看线上权威配置（处理跨浏览器 / 缓存过期）
+    // 2) 读取线上权威配置：未到维护时间则保持原网页正常访问，到点才跳转
     fetch('_data/config.json?t=' + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (cfg) {
-        if (cfg && checkMaintenance(cfg)) return;
-        reveal();
-      })
-      .catch(reveal);
+      .then(function (cfg) { var u = getRedirectUrl(cfg); if (u) redirect(u); })
+      .catch(function () {});
   })();
   </script>
   <!-- ===== /维护模式检查 ===== -->
