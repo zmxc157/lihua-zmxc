@@ -298,6 +298,8 @@
   var pressed = false;
   var lastTrail = null;     // 上一次喷拖尾的位置（用于按距离节流）
   var lastWheel = 0;
+  // 最近一次爆发记录（用于 touchstart 与 pointerdown 去重）
+  var lastBurstAt = 0, lastBurstX = -1, lastBurstY = -1;
 
   function maybeTrail(x, y, dx, dy) {
     if (lastTrail) {
@@ -314,6 +316,7 @@
     var pt = pointOf(e); if (!pt) return;
     pressed = true;
     spawnBurst(pt.x, pt.y);
+    lastBurstAt = Date.now(); lastBurstX = pt.x; lastBurstY = pt.y;
   }
   function onMove(e) {
     if (reduceMotion) return;
@@ -337,6 +340,30 @@
     maybeTrail(e.clientX, e.clientY, 0, e.deltaY < 0 ? -1 : 1);
   }
 
+  /* ---- 触摸兜底通道 ----
+     部分国产内核（微信 X5 / 旧 XWeb 等）虽然存在 PointerEvent，
+     但 pointerdown 实际不触发，导致手机端完全没有点击特效。
+     这里统一绑定 touchstart/touchmove：
+     · 正常浏览器：pointerdown 先于 touchstart 触发且已爆发，
+       按「500ms 内 + 80px 内」去重，避免出现双份特效；
+     · 异常内核：pointer 不触发，由本通道兜底，保证手机端必定有特效。 */
+  function onTouchStart(e) {
+    if (reduceMotion) return;
+    if (!canvas) ensureCanvas();
+    if (window.PointerEvent && Date.now() - lastBurstAt < 500 && lastBurstX >= 0) {
+      var pt = pointOf(e);
+      if (pt && Math.hypot(pt.x - lastBurstX, pt.y - lastBurstY) < 80) return; // 已由 pointer 处理
+    }
+    onDown(e);
+  }
+  function onTouchMove(e) {
+    if (reduceMotion) return;
+    if (!canvas) ensureCanvas();
+    if (!e.touches || !e.touches.length) return;
+    var t = e.touches[0];
+    maybeTrail(t.clientX, t.clientY, 0, 0);   // maybeTrail 自带 14px 距离节流，与 pointermove 双通道不重复
+  }
+
   function init() {
     if (reduceMotion) return;
     scale();
@@ -346,21 +373,18 @@
       document.addEventListener('pointerup', onUp, { passive: true });
       document.addEventListener('pointercancel', onUp, { passive: true });
     } else {
-      // 旧浏览器降级
+      // 旧浏览器降级（鼠标）
       document.addEventListener('mousedown', onDown, { passive: true });
       document.addEventListener('mousemove', function (e) {
         if (e.buttons > 0) onMove(e); else { lastTrail = null; }
       }, { passive: true });
       document.addEventListener('mouseup', onUp, { passive: true });
-      document.addEventListener('touchstart', onDown, { passive: true });
-      document.addEventListener('touchmove', function (e) {
-        if (e.touches && e.touches.length) {
-          var t = e.touches[0];
-          maybeTrail(t.clientX, t.clientY, 0, 0);
-        }
-      }, { passive: true });   // passive：绝不阻止页面滚动（手机上下滑）
-      document.addEventListener('touchend', onUp, { passive: true });
     }
+    // 触摸通道：所有浏览器统一绑定（正常内核去重，异常内核兜底），手机端必定生效
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: true });   // passive：绝不阻断页面滚动
+    document.addEventListener('touchend', onUp, { passive: true });
+    document.addEventListener('touchcancel', onUp, { passive: true });
     // 桌面鼠标滚轮（上下滚动）反馈
     document.addEventListener('wheel', onWheel, { passive: true });
     window.addEventListener('beforeunload', function () {

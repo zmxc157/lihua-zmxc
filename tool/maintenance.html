@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>メンテナンスのお知らせ · 星辰桑切片站</title>
+  <title>维护通知 · 星辰桑切片站</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='25,6 75,6 100,50 75,94 25,94 0,50' fill='%231e6fe0'/%3E%3C/svg%3E" />
 
-  <!-- 与主站点一致的自定义字体（根目录 zt.ttf） -->
+  <!-- 与主站点一致的自定义字体（根目录 zt.ttf / 方正兰亭圆） -->
   <style>
     @font-face {
       font-family: 'ZTCustom';
@@ -23,28 +23,28 @@
   <link rel="stylesheet" href="../assets/cursors.css" />
 
   <style>
-    /* ============ 蔚蓝档案（基沃托斯）官方配色，取自参考仓库 ============ */
+    /* ============ 蔚蓝档案（基沃托斯）官方配色，取自参考仓库与游戏内截图 ============ */
     :root {
       --ba-deep:    #06101c;
       --ba-navy:    #0b1c33;
       --ba-blue:    #1e6fe0;
       --ba-sky:     #4db8ff;
-      --ba-cyan:    #48C8FA;     /* 参考：加载条内条 */
-      --ba-cyan2:   #31C8FF;
-      --ba-slate:   #133453;     /* 参考：profile-bar-deco */
-      --ba-slate2:  #243239;     /* 参考：底部条 */
-      --ba-slate3:  #466398;     /* 参考：导航/后退按钮 */
-      --ba-ink:     #284160;     /* 参考：正文文字 */
-      --ba-ink2:    #0F3252;
-      --ba-gold:    #FDEE5A;     /* 参考：标题黄线 / 等级字 */
-      --ba-gold2:   #F2CE02;
-      --ba-panel:   #EFEFED;     /* 参考：dialog 面板 */
-      --ba-panel2:  #F8FBFB;
-      --ba-line:    rgba(77,184,255,.5);
+      --ba-cyan:    #48C8FA;
+      --ba-steel:   #35618f;    /* 截图：分节蓝条（奖励/商店蓝条） */
+      --ba-steel2:  #3e6fa6;
+      --ba-ink:     #33475f;    /* 截图：正文深灰蓝 */
+      --ba-ink2:    #1f3a5e;    /* 截图：标题深海军蓝 */
+      --ba-gold:    #ffd84d;    /* 截图：确认按钮金 */
+      --ba-gold2:   #f3bd2e;
+      --ba-goldln:  #d99e14;
+      --ba-cyana:   #eafafe;    /* 截图：取消/OK 浅青 */
+      --ba-cyanb:   #a8ddf5;
+      --ba-cyanln:  #7fc3e6;
+      --ba-panel:   #eef2f5;    /* 截图：浅灰内容面板 */
+      --ba-dark:    #222f40;    /* 截图：底部深海军信息条 */
 
-      /* 与主站点 css/style.css 完全一致的字体栈 */
+      /* 与主站点 css/style.css 完全一致的字体栈（方正兰亭圆不动） */
       --font-main: 'ZTCustom', 'Zen Maru Gothic', 'Noto Sans SC', system-ui, sans-serif;
-      --font-jp:   'ZTCustom', 'Shippori Mincho', 'Noto Serif JP', serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -86,7 +86,6 @@
       100%{transform: translateY(-20vh) rotate(360deg); opacity:0}
     }
 
-    /* ===================== BA 对话框遮罩（参考 .custom-layer） ===================== */
     .ba-overlay {
       position: relative; z-index: 1;
       width: min(94vw, 560px);
@@ -94,114 +93,120 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* 对话框主体（参考 .custom-box：#EFEFED / border-radius:2vh / 阴影） */
+    /* ============ 游戏内弹窗（截图：白底 + 淡青三角马赛克角饰 + 圆角 + 深投影） ============ */
     .ba-dialog {
       position: relative;
       width: 100%;
       max-height: calc(100dvh - 48px);
       display: flex; flex-direction: column;
-      background: var(--ba-panel);
-      border-radius: 18px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 0 2px rgba(70,99,152,.35);
+      background: linear-gradient(180deg, #ffffff 0%, #f4f8f9 100%);
+      border-radius: 12px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.6) inset;
       overflow: hidden;
       animation: pop .35s cubic-bezier(.2,.9,.3,1.2);
     }
     @keyframes pop { from{transform: scale(.92); opacity:0} to{transform: scale(1); opacity:1} }
 
-    /* 四角 BA 风装饰（参考 popup-deco-box.png） */
-    .deco { position: absolute; width: 26px; height: 26px; z-index: 3; pointer-events: none;
-            border: 3px solid var(--ba-slate3); filter: drop-shadow(0 0 4px rgba(70,99,152,.6)); }
-    .deco.tl { top: 6px; left: 6px;  border-right: none; border-bottom: none; border-top-left-radius: 8px; }
-    .deco.tr { top: 6px; right: 6px; border-left: none;  border-bottom: none; border-top-right-radius: 8px; }
-    .deco.bl { bottom: 6px; left: 6px;  border-right: none; border-top: none; border-bottom-left-radius: 8px; }
-    .deco.br { bottom: 6px; right: 6px; border-left: none;  border-top: none; border-bottom-right-radius: 8px; }
+    /* 淡青三角马赛克角饰（截图：弹窗左上 / 右下） */
+    .mosaic {
+      position: absolute; width: 150px; height: 100px; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='100' viewBox='0 0 150 100'%3E%3Cpolygon points='0,0 50,0 0,50' fill='%23dcf0fb'/%3E%3Cpolygon points='50,0 100,0 50,50' fill='%23eaf7fe'/%3E%3Cpolygon points='0,50 50,50 0,100' fill='%23eaf7fe'/%3E%3Cpolygon points='50,50 100,50 50,100' fill='%23d2ebf9'/%3E%3Cpolygon points='100,0 150,0 100,50' fill='%23d2ebf9'/%3E%3Cpolygon points='100,50 150,50 100,100' fill='%23e2f4fc'/%3E%3C/svg%3E");
+      background-size: 150px 100px; background-repeat: no-repeat;
+      opacity: .8;
+    }
+    .mosaic.tl { top: 0; left: 0; }
+    .mosaic.br { bottom: 0; right: 0; transform: rotate(180deg); }
 
-    /* ===================== 标题栏（参考 .title-box + bar-blue-01） ===================== */
-    .ba-titlebar {
-      position: relative;
-      flex: none;
-      height: 58px;
-      display: flex; align-items: center; gap: 10px;
-      padding: 0 16px;
-      background: linear-gradient(90deg, #16395f 0%, #2d6aa8 55%, #3f8fd0 100%);
-      box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    /* ============ 标题区（截图：居中深海军标题 + 短黄下划线 + 右上细×） ============ */
+    .ba-head {
+      position: relative; flex: none;
+      padding: 20px 52px 0;
+      text-align: center; z-index: 1;
     }
-    .ba-titlebar::after { /* 顶高光，模拟 bar-blue 质感 */
-      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 42%;
-      background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
-    }
-    .ba-mark {
-      width: 26px; height: 26px; flex: none;
-      clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
-      background: linear-gradient(135deg, #fff, var(--ba-gold));
-      box-shadow: 0 0 10px rgba(253,238,90,.6);
-      display: grid; place-items: center; font-size: 13px;
-    }
-    .ba-title-wrap { flex: 1; min-width: 0; }
     .ba-title {
-      font-family: var(--font-main);
-      font-size: 17px; font-weight: 800; letter-spacing: .14em;
-      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.45);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: clamp(19px, 5vw, 22px); font-weight: 800;
+      letter-spacing: .18em; color: var(--ba-ink2);
     }
-    .ba-title-deco { height: 4px; margin-top: 5px; width: 72px; background: var(--ba-gold);
-                      border-radius: 2px; box-shadow: 0 0 6px rgba(253,238,90,.7); }
+    .ba-title-underline {
+      width: 46px; height: 4px; margin: 8px auto 0;
+      background: var(--ba-gold); border-radius: 2px;
+      box-shadow: 0 0 6px rgba(255,216,77,.65);
+    }
     .ba-close {
-      flex: none; width: 30px; height: 30px; border: none; cursor: pointer;
-      border-radius: 7px; background: rgba(255,255,255,.16); color: #fff;
-      font-size: 18px; line-height: 1; display: grid; place-items: center;
+      position: absolute; top: 10px; right: 10px; z-index: 2;
+      width: 36px; height: 36px; border: none; cursor: pointer;
+      background: transparent; color: var(--ba-ink2);
+      font-size: 28px; font-weight: 300; line-height: 1;
+      display: grid; place-items: center; border-radius: 50%;
       transition: background .15s ease;
     }
-    .ba-close:hover { background: rgba(255,255,255,.32); }
+    .ba-close:hover { background: rgba(31,58,94,.08); }
+    .ba-eyebrow {
+      margin-top: 6px;
+      font-size: 10px; letter-spacing: .34em; color: #7d93a9; font-weight: 700;
+    }
 
-    /* ===================== 内容区 ===================== */
+    /* ============ 内容区 ============ */
     .ba-body {
-      padding: clamp(20px, 5vw, 30px) clamp(18px, 5vw, 32px) clamp(20px, 5vw, 28px);
+      position: relative; z-index: 1;
+      padding: 10px clamp(16px, 4.6vw, 30px) clamp(18px, 4.6vw, 26px);
       overflow-y: auto;
-      scrollbar-width: thin; scrollbar-color: rgba(70,99,152,.5) transparent;
+      scrollbar-width: thin; scrollbar-color: rgba(53,97,143,.45) transparent;
     }
     .ba-body::-webkit-scrollbar { width: 6px; }
-    .ba-body::-webkit-scrollbar-thumb { background: rgba(70,99,152,.5); border-radius: 3px; }
+    .ba-body::-webkit-scrollbar-thumb { background: rgba(53,97,143,.45); border-radius: 3px; }
 
-    .ba-eyebrow { font-size: 10px; letter-spacing: .38em; color: var(--ba-slate3); font-weight: 700; text-align: center; }
     .ba-greet {
-      text-align: center; margin: 10px 0 4px;
+      text-align: center; margin: 6px 0 8px;
       font-size: clamp(14px, 3.8vw, 16px); color: var(--ba-ink2); font-weight: 700;
     }
     .ba-greet .hl { color: var(--ba-blue); }
     .ba-msg {
-      text-align: center; margin: 0 auto; max-width: 420px;
-      font-size: clamp(12.5px, 3.4vw, 13.5px); line-height: 1.85; color: #3a566f;
+      text-align: center; margin: 0 auto 16px; max-width: 430px;
+      font-size: clamp(12.5px, 3.4vw, 13.5px); line-height: 1.85; color: var(--ba-ink);
     }
 
-    .ba-divider { height: 1px; margin: 18px auto; width: 80%;
-                  background: linear-gradient(to right, transparent, rgba(70,99,152,.5), transparent); }
-
-    /* 信息行（参考 HUD 的资源条：图标 + 标签 + 数值） */
-    .ba-info { display: flex; flex-direction: column; gap: 12px; max-width: 440px; margin: 0 auto; }
-    .ba-row {
-      display: flex; align-items: center; gap: 12px;
-      background: linear-gradient(90deg, rgba(70,99,152,.10), rgba(70,99,152,0));
-      border-left: 3px solid var(--ba-cyan);
-      border-radius: 8px; padding: 11px 14px;
+    /* 钢蓝分节条（截图：「奖励」蓝条） */
+    .ba-sec {
+      display: flex; align-items: center; gap: 9px;
+      background: linear-gradient(90deg, var(--ba-steel2), var(--ba-steel));
+      color: #fff; font-weight: 700; font-size: 13px; letter-spacing: .22em;
+      padding: 6px 14px; border-radius: 3px;
+      box-shadow: 0 2px 5px rgba(31,58,94,.28);
     }
-    .ba-ico {
-      flex: none; width: 34px; height: 34px; border-radius: 8px;
-      display: grid; place-items: center; font-size: 17px;
-      background: linear-gradient(135deg, #eaf3fb, #d4e6f6); color: var(--ba-slate);
-      box-shadow: inset 0 0 0 1px rgba(70,99,152,.25);
+    .ba-sec .tick {
+      width: 0; height: 0; flex: none;
+      border-left: 7px solid var(--ba-gold);
+      border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent;
     }
-    .ba-label { flex: none; width: 64px; font-size: 13px; font-weight: 800; color: var(--ba-ink2); letter-spacing: .04em; }
-    .ba-value { flex: 1; font-size: 14px; color: var(--ba-ink); font-weight: 700; word-break: break-all; }
-    .ba-value b { color: var(--ba-blue); }
-    .ba-value a { color: var(--ba-blue); text-decoration: none; border-bottom: 1px dashed rgba(30,111,224,.6); font-weight: 800; }
-    .ba-value a:hover { color: #0d4fa0; }
+    .ba-panelbox {
+      background: var(--ba-panel); border-radius: 8px;
+      padding: 12px 14px; margin-bottom: 14px;
+      font-size: 14px; line-height: 1.8; color: var(--ba-ink);
+    }
+    .ba-panelbox b { color: var(--ba-ink2); }
+    .ba-panelbox a {
+      color: var(--ba-blue); font-weight: 800; text-decoration: none;
+      border-bottom: 1px dashed rgba(30,111,224,.6); word-break: break-all;
+    }
+    .ba-panelbox a:hover { color: #0d4fa0; }
 
-    /* BA 加载条（参考：外框 #454c61ab + 内条 #48C8FA） */
-    .ba-bar-wrap { max-width: 440px; margin: 18px auto 0; }
+    /* 深海军信息条（截图：商店「总价」深色行） */
+    .ba-darkrow {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: var(--ba-dark); color: #fff;
+      border-radius: 6px; padding: 10px 14px; margin-bottom: 14px;
+      font-weight: 700; font-size: clamp(12.5px, 3.4vw, 14px);
+      box-shadow: 0 3px 8px rgba(0,0,0,.25);
+    }
+    .ba-darkrow .lab { color: #9fb4c9; letter-spacing: .12em; flex: none; }
+    .ba-darkrow .val { color: var(--ba-gold); }
+
+    /* 维护进度条（参考：加载条 外框 #454c61ab + 内条 #48C8FA） */
     .ba-bar {
-      width: 100%; height: 12px; border-radius: 8px 3px 8px 3px;
-      background: #454c61ab; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.3);
+      height: 10px; border-radius: 8px 3px 8px 3px;
+      background: rgba(69,76,97,.67); overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.3); margin: 2px 0 14px;
     }
     .ba-bar > i {
       display: block; height: 100%; width: 64%;
@@ -211,58 +216,57 @@
       animation: flow 2.4s ease-in-out infinite;
     }
     @keyframes flow { 0%,100%{width: 54%} 50%{width: 76%} }
-    .ba-bar-text { text-align: center; margin-top: 8px; font-size: 11px; letter-spacing: .28em;
-                   color: var(--ba-slate3); font-weight: 700; }
 
-    /* ===================== 标志性斜切平行四边形按钮（参考 skew + 购买框） ===================== */
-    .ba-actions { display: flex; gap: 14px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+    /* ============ 按钮（截图：斜切平行四边形 · 浅青OK / 金色确认） ============ */
+    .ba-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
     .ba-btn {
-      position: relative; border: none; cursor: pointer; text-decoration: none;
-      padding: 13px 30px; min-width: 140px; text-align: center;
-      font-family: var(--font-main); font-size: 15px; font-weight: 800; letter-spacing: .04em;
-      transform: skew(-12deg); border-radius: 9px;
-      transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+      position: relative; display: inline-flex; align-items: center; justify-content: center;
+      min-width: 158px; padding: 12px 26px;
+      border: none; cursor: pointer; text-decoration: none;
+      font-family: var(--font-main); font-size: clamp(14.5px, 3.8vw, 16px);
+      font-weight: 800; letter-spacing: .08em;
+      transform: skew(-10deg); border-radius: 8px;
+      transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
     }
-    .ba-btn > span { display: inline-block; transform: skew(12deg); }
-    .ba-btn:hover { filter: brightness(1.06); transform: skew(-12deg) translateY(-1px);
-                    box-shadow: 0 8px 18px rgba(0,0,0,.3); }
-    .ba-btn:active { transform: skew(-12deg) translateY(0); }
+    .ba-btn > span { display: inline-block; transform: skew(10deg); }
+    .ba-btn:hover { filter: brightness(1.05); transform: skew(-10deg) translateY(-1px); }
+    .ba-btn:active { transform: skew(-10deg) translateY(1px); filter: brightness(.97); }
 
-    .ba-btn-blue {
-      background: linear-gradient(135deg, #2d6aa8, #4db8ff);
-      color: #fff;
-      box-shadow: 0 5px 14px rgba(30,111,224,.45), inset 0 1px 0 rgba(255,255,255,.35);
+    .ba-btn-cyan {
+      background: linear-gradient(180deg, var(--ba-cyana) 0%, #c8ecfa 55%, var(--ba-cyanb) 100%);
+      border-bottom: 3px solid var(--ba-cyanln);
+      color: #1f4260;
+      box-shadow: 0 6px 14px rgba(60,130,180,.30), inset 0 1px 0 rgba(255,255,255,.85);
     }
-    .ba-btn-blue:hover { box-shadow: 0 8px 18px rgba(30,111,224,.5), inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 2px rgba(253,238,90,.7); }
+    .ba-btn-cyan:hover { box-shadow: 0 9px 18px rgba(60,130,180,.36), inset 0 1px 0 rgba(255,255,255,.85); }
     .ba-btn-gold {
-      background: linear-gradient(135deg, var(--ba-gold), #fff3a8);
-      color: var(--ba-ink2);
-      box-shadow: 0 5px 14px rgba(180,160,0,.4), inset 0 1px 0 rgba(255,255,255,.6);
+      background: linear-gradient(180deg, #ffe570 0%, #fbd44e 55%, var(--ba-gold2) 100%);
+      border-bottom: 3px solid var(--ba-goldln);
+      color: #233450;
+      box-shadow: 0 6px 14px rgba(160,120,10,.38), inset 0 1px 0 rgba(255,255,255,.65);
     }
-    .ba-btn-gold:hover { box-shadow: 0 8px 18px rgba(180,160,0,.45), inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 2px rgba(30,111,224,.6); }
+    .ba-btn-gold:hover { box-shadow: 0 9px 18px rgba(160,120,10,.45), inset 0 1px 0 rgba(255,255,255,.65); }
 
     .ba-foot {
-      text-align: center; margin-top: 16px; font-size: 11.5px; line-height: 1.7; color: #6a819a;
+      text-align: center; margin-top: 16px;
+      font-size: 11.5px; line-height: 1.7; color: #6a819a;
     }
     .ba-foot .sign { display: block; margin-top: 4px; color: var(--ba-ink2); font-weight: 700; }
     .ba-foot .star { color: var(--ba-gold2); }
 
-    /* ===================== 双端适配 ===================== */
+    /* ============ 双端适配 ============ */
     @media (max-width: 480px) {
       .ba-overlay { width: 94vw; }
-      .ba-title { font-size: 15px; letter-spacing: .1em; }
-      .ba-mark { width: 22px; height: 22px; font-size: 11px; }
-      .ba-row { padding: 9px 11px; gap: 9px; }
-      .ba-ico { width: 30px; height: 30px; font-size: 15px; }
-      .ba-label { width: 56px; font-size: 12px; }
-      .ba-value { font-size: 13px; }
-      .ba-actions { flex-direction: column; }
+      .ba-head { padding: 16px 48px 0; }
+      .ba-sec { font-size: 12px; letter-spacing: .16em; padding: 5px 11px; }
+      .ba-panelbox { font-size: 13px; padding: 10px 12px; }
+      .ba-actions { flex-direction: column; align-items: stretch; }
       .ba-btn { width: 100%; min-width: 0; }
+      .mosaic { width: 110px; height: 74px; background-size: 110px 74px; }
     }
     @media (max-width: 360px) {
-      .ba-titlebar { height: 52px; padding: 0 12px; gap: 8px; }
-      .ba-title { font-size: 13px; }
-      .ba-title-deco { width: 56px; }
+      .ba-title { letter-spacing: .12em; }
+      .ba-eyebrow { letter-spacing: .24em; }
     }
     @media (min-width: 1024px) {
       .ba-overlay { width: min(90vw, 580px); }
@@ -274,55 +278,46 @@
   <div class="bg-stars" id="stars"></div>
   <div class="bg-ambient" id="ambient"></div>
 
-  <!-- BA 游戏内对话框 -->
+  <!-- 游戏内弹窗（按官方真实截图重构：白底 / 居中标题+黄线 / 钢蓝分节条 / 斜切金·青按钮） -->
   <div class="ba-overlay">
     <div class="ba-dialog">
-      <span class="deco tl"></span><span class="deco tr"></span>
-      <span class="deco bl"></span><span class="deco br"></span>
+      <span class="mosaic tl"></span><span class="mosaic br"></span>
 
-      <!-- 标题栏 -->
-      <div class="ba-titlebar">
-        <span class="ba-mark">✦</span>
-        <div class="ba-title-wrap">
-          <div class="ba-title">メンテナンスのお知らせ</div>
-          <div class="ba-title-deco"></div>
-        </div>
+      <!-- 标题区 -->
+      <div class="ba-head">
+        <div class="ba-title">维护通知</div>
+        <div class="ba-title-underline"></div>
+        <div class="ba-eyebrow">WEBSITE MAINTENANCE NOTICE</div>
         <button class="ba-close" type="button" aria-label="关闭" onclick="history.length>1?history.back():location.href='../index.html'">×</button>
       </div>
 
       <!-- 内容区 -->
       <div class="ba-body">
-        <div class="ba-eyebrow">WEBSITE MAINTENANCE NOTICE</div>
         <p class="ba-greet">欢迎连接【什亭之箱】，<span class="hl">老师</span>。</p>
         <p class="ba-msg">为保证更好的网站体验，本站点将进行维护更新。维护期间网站暂时无法访问，由此给您带来的不便，我们深表歉意，敬请谅解。</p>
 
-        <div class="ba-divider"></div>
-
-        <div class="ba-info">
-          <div class="ba-row">
-            <span class="ba-ico">⏱</span>
-            <span class="ba-label">维护时间</span>
-            <span class="ba-value"><b>2026年10月20日 12:00</b> 起（长期维护，恢复时间将另行通知）</span>
-          </div>
-          <div class="ba-row">
-            <span class="ba-ico">✉</span>
-            <span class="ba-label">联系邮箱</span>
-            <span class="ba-value">如有疑问请联系：<a href="mailto:1578929129@qq.com">1578929129@qq.com</a></span>
-          </div>
+        <!-- 深海军信息条（维护时间） -->
+        <div class="ba-darkrow">
+          <span class="lab">维护时间</span>
+          <span class="val">2026年10月20日 12:00 起 ～ 9999/12/31</span>
         </div>
 
-        <div class="ba-bar-wrap">
-          <div class="ba-bar"><i></i></div>
-          <p class="ba-bar-text">ただいまメンテナンス中です · SERVER MAINTENANCE</p>
+        <div class="ba-bar"><i></i></div>
+
+        <!-- 钢蓝分节条 + 浅灰面板（联系方式） -->
+        <div class="ba-sec"><span class="tick"></span>联系方式</div>
+        <div class="ba-panelbox">
+          如有疑问请联系运营邮箱：<a href="mailto:1578929129@qq.com">1578929129@qq.com</a><br />
+          也可以点击下方金色的「工单反馈」按钮，通过问卷向我们提交反馈工单。
         </div>
 
         <div class="ba-actions">
-          <button class="ba-btn ba-btn-blue" type="button" onclick="history.length>1?history.back():location.href='../index.html'"><span>了解 (OK)</span></button>
-          <a class="ba-btn ba-btn-gold" href="mailto:1578929129@qq.com"><span>📨 联系运营团队</span></a>
+          <button class="ba-btn ba-btn-cyan" type="button" onclick="history.length>1?history.back():location.href='../index.html'"><span>了解 (OK)</span></button>
+          <a class="ba-btn ba-btn-gold" href="https://www.wjx.top/vm/P19qEar.aspx#" target="_blank" rel="noopener"><span>✒ 工单反馈</span></a>
         </div>
 
         <p class="ba-foot">
-          给您带来不便我们深感歉意，感谢您的包容与理解。<br/>今后也请继续支持《星辰桑切片站》。<span class="star"> ✦</span>
+          给您带来不便我们深感歉意，感谢您的包容与理解。<br />今后也请继续支持《星辰桑切片站》。<span class="star"> ✦</span>
           <span class="sign">—— 星辰桑切片站 · 运营团队</span>
         </p>
       </div>
